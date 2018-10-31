@@ -122,7 +122,7 @@ void on_tDataProperties_selection_changed(GtkTreeSelection *treeselection, gpoin
 void on_tUnitSelector_selection_changed(GtkTreeSelection *treeselection, gpointer user_data);
 void on_tUnitSelectorCategories_selection_changed(GtkTreeSelection *treeselection, gpointer user_data);
 
-void execute_expression(bool force = true, bool do_mathoperation = false, MathOperation op = OPERATION_ADD, MathFunction *f = NULL, bool do_stack = false, size_t stack_index = 0, string execute_str = string(), string str = string());
+void execute_expression(bool force = true, bool do_mathoperation = false, MathOperation op = OPERATION_ADD, MathFunction *f = NULL, bool do_stack = false, size_t stack_index = 0, string execute_str = string(), string str = string(), bool check_exrates = true);
 void setResult(Prefix *prefix = NULL, bool update_history = true, bool update_parse = false, bool force = false, string transformation = "", size_t stack_index = 0, bool register_moved = false);
 
 void set_rpn_mode(bool b);
@@ -168,6 +168,7 @@ void load_preferences();
 void save_preferences(bool mode = false);
 void edit_preferences();
 
+gint completion_sort_func(GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer user_data);
 gint string_sort_func(GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer user_data);
 gint int_string_sort_func(GtkTreeModel *model, GtkTreeIter *a, GtkTreeIter *b, gpointer user_data);
 
@@ -203,9 +204,9 @@ void new_vector(GtkMenuItem *w, gpointer user_data);
 void new_unit(GtkMenuItem *w, gpointer user_data);
 void add_as_variable();
 
-void fetch_exchange_rates(int timeout);
+void fetch_exchange_rates(int timeout, int n = -1);
 
-void edit_argument(Argument *arg = NULL);
+bool edit_argument(Argument *arg = NULL);
 
 void edit_unknown(const char *category = "", Variable *v = NULL, GtkWidget *win = NULL);
 void edit_variable(const char *category = "", Variable *v = NULL, MathStructure *mstruct_ = NULL, GtkWidget *win = NULL);
@@ -226,6 +227,8 @@ extern "C" {
 #endif
 
 void on_completion_match_selected(GtkTreeView*, GtkTreePath *path, GtkTreeViewColumn*, gpointer);
+void on_units_convert_view_row_activated(GtkTreeView*, GtkTreePath *path, GtkTreeViewColumn*, gpointer);
+void units_convert_resize_popup();
 
 void *view_proc(void*);
 void *command_proc(void*);
@@ -245,6 +248,7 @@ void on_menu_item_meta_mode_delete_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_quit_activate(GtkMenuItem *w, gpointer user_data);
 void on_colorbutton_status_error_color_color_set(GtkColorButton *w, gpointer user_data);
 void on_colorbutton_status_warning_color_color_set(GtkColorButton *w, gpointer user_data);
+void on_preferences_checkbutton_copy_separator_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_lower_case_numbers_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_e_notation_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_lower_case_e_toggled(GtkToggleButton *w, gpointer user_data);
@@ -252,7 +256,6 @@ void on_preferences_checkbutton_alternative_base_prefixes_toggled(GtkToggleButto
 void on_preferences_checkbutton_spell_out_logical_operators_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_unicode_signs_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_display_expression_status_toggled(GtkToggleButton *w, gpointer user_data);
-void on_preferences_checkbutton_enable_completion_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_fetch_exchange_rates_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_save_defs_toggled(GtkToggleButton *w, gpointer user_data);
 void on_preferences_checkbutton_save_mode_toggled(GtkToggleButton *w, gpointer user_data);
@@ -400,7 +403,7 @@ void on_set_base_radiobutton_input_hexadecimal_toggled(GtkToggleButton *w, gpoin
 void on_set_base_radiobutton_input_other_toggled(GtkToggleButton *w, gpointer user_data);
 void on_set_base_radiobutton_input_roman_toggled(GtkToggleButton *w, gpointer user_data);
 void on_set_base_spinbutton_input_other_value_changed(GtkSpinButton *w, gpointer user_data);
-void convert_number_bases(const gchar *initial_expression);
+void convert_number_bases(const gchar *initial_expression, bool b_result = false);
 void on_menu_item_convert_number_bases_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_periodic_table_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_assumptions_integer_activate(GtkMenuItem *w, gpointer user_data);
@@ -446,6 +449,12 @@ void on_popup_menu_item_all_prefixes_activate(GtkMenuItem *w, gpointer user_data
 void on_popup_menu_item_denominator_prefixes_activate(GtkMenuItem *w, gpointer user_data);
 void on_popup_menu_item_view_matrix_activate(GtkMenuItem *w, gpointer user_data);
 void on_popup_menu_item_view_vector_activate(GtkMenuItem *w, gpointer user_data);
+void on_popup_menu_item_complex_rectangular_activate(GtkMenuItem *w, gpointer user_data);
+void on_popup_menu_item_complex_exponential_activate(GtkMenuItem *w, gpointer user_data);
+void on_popup_menu_item_complex_polar_activate(GtkMenuItem *w, gpointer user_data);
+void on_menu_item_complex_rectangular_activate(GtkMenuItem *w, gpointer user_data);
+void on_menu_item_complex_exponential_activate(GtkMenuItem *w, gpointer user_data);
+void on_menu_item_complex_polar_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_display_normal_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_display_engineering_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_display_scientific_activate(GtkMenuItem *w, gpointer user_data);
@@ -489,6 +498,7 @@ void on_menu_item_decimals_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_plot_functions_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_factorize_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_simplify_activate(GtkMenuItem *w, gpointer user_data);
+void on_menu_item_expand_partial_fractions_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_set_unknowns_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_assume_nonzero_denominators_activate(GtkMenuItem *w, gpointer user_data);
 void on_menu_item_algebraic_mode_simplify_activate(GtkMenuItem *w, gpointer user_data);
@@ -537,6 +547,18 @@ void on_unknown_edit_checkbutton_custom_assumptions_toggled(GtkToggleButton *w, 
 void on_unknown_edit_combobox_type_changed(GtkComboBox *om, gpointer user_data);
 void on_unknown_edit_combobox_sign_changed(GtkComboBox *om, gpointer user_data);
 
+void on_function_changed();
+void on_simple_function_changed();
+void on_argument_changed();
+void on_unit_changed();
+void on_variable_changed();
+void on_dataset_changed();
+void on_dataobject_changed();
+void on_dataproperty_changed();
+void on_matrix_changed();
+void on_unknown_changed();
+void on_name_changed();
+
 void on_dataset_edit_entry_name_changed(GtkEditable *editable, gpointer user_data);
 void on_dataset_edit_button_new_property_clicked(GtkButton *button, gpointer user_data);
 void on_dataset_edit_button_edit_property_clicked(GtkButton *button, gpointer user_data);
@@ -555,10 +577,19 @@ void on_nbases_entry_decimal_changed(GtkEditable *editable, gpointer user_data);
 void on_nbases_entry_binary_changed(GtkEditable *editable, gpointer user_data);
 void on_nbases_entry_octal_changed(GtkEditable *editable, gpointer user_data);
 void on_nbases_entry_hexadecimal_changed(GtkEditable *editable, gpointer user_data);
+void on_nbases_entry_duo_changed(GtkEditable *editable, gpointer user_data);
+void on_nbases_entry_roman_changed(GtkEditable *editable, gpointer user_data);
+void on_nbases_entry_sexa_changed(GtkEditable *editable, gpointer user_data);
 
 void on_percentage_button_clear_clicked(GtkWidget*, gpointer);
 
 void on_menu_item_show_percentage_dialog_activate(GtkMenuItem *w, gpointer user_data);
+
+void on_menu_item_show_calendarconversion_dialog_activate(GtkMenuItem *w, gpointer user_data);
+void on_popup_menu_item_calendarconversion_activate(GtkMenuItem *w, gpointer user_data);
+void on_popup_menu_item_to_utc_activate(GtkMenuItem *w, gpointer user_data);
+
+void calendar_changed(GtkWidget*, gpointer);
 
 void on_button_functions_clicked(GtkButton *button, gpointer user_data);
 void on_button_variables_clicked(GtkButton *button, gpointer user_data);
@@ -669,6 +700,12 @@ void on_convert_button_convert_clicked(GtkButton *w, gpointer user_data);
 void on_convert_entry_unit_activate(GtkEntry *entry, gpointer user_data);
 
 void on_element_button_clicked(GtkButton *w, gpointer user_data);
+
+void on_convert_entry_search_changed(GtkEntry *w, gpointer user_data);
+void on_units_entry_search_changed(GtkEntry *w, gpointer user_data);
+void on_units_convert_search_changed(GtkEntry *w, gpointer user_data);
+void on_functions_entry_search_changed(GtkEntry *w, gpointer user_data);
+void on_variables_entry_search_changed(GtkEntry *w, gpointer user_data);
 
 void save_accels();
 

@@ -15,6 +15,7 @@
 #define MENU_ITEM_WITH_INT(x,y,z)		item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), GINT_TO_POINTER (z)); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
 #define MENU_ITEM_WITH_STRING(x,y,z)		item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), (gpointer) z); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
 #define MENU_ITEM_WITH_POINTER(x,y,z)		item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), (gpointer) z); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
+#define MENU_ITEM_WITH_POINTER_AND_FLAG(x,y,z)	{GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6); unordered_map<string, GdkPixbuf*>::const_iterator it_flag = flag_images.find(z->referenceName()); if(it_flag != flag_images.end()) {GtkWidget *image_w = gtk_image_new_from_pixbuf(it_flag->second); gtk_widget_set_size_request(image_w, 32, -1); gtk_container_add(GTK_CONTAINER(box), image_w);} gtk_container_add(GTK_CONTAINER(box), gtk_label_new(x)); item = gtk_menu_item_new(); gtk_container_add(GTK_CONTAINER(item), box); gtk_widget_show_all(item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), (gpointer) z); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);}
 #define MENU_ITEM_MARKUP_WITH_POINTER(x,y,z)	item = gtk_menu_item_new_with_label(""); gtk_label_set_markup(GTK_LABEL(gtk_bin_get_child(GTK_BIN(item))), x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), (gpointer) z); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
 #define MENU_ITEM(x,y)				item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), NULL); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
 #define MENU_ITEM_MARKUP(x,y)			item = gtk_menu_item_new_with_label(""); gtk_label_set_markup(GTK_LABEL(gtk_bin_get_child(GTK_BIN(item))), x); gtk_widget_show (item); g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK(y), NULL); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
@@ -41,6 +42,9 @@ enum {
 	UNITS_NAMES_COLUMN,
 	UNITS_BASE_COLUMN,
 	UNITS_POINTER_COLUMN,
+	UNITS_FLAG_COLUMN,
+	UNITS_VISIBLE_COLUMN,
+	UNITS_VISIBLE_COLUMN_CONVERT,
 	UNITS_N_COLUMNS
 };
 
@@ -157,11 +161,11 @@ GtkWidget* get_csv_export_dialog (void);
 GtkWidget* get_set_base_dialog (void);
 GtkWidget* get_nbases_dialog (void);
 GtkWidget* get_percentage_dialog (void);
+GtkWidget* get_calendarconversion_dialog (void);
 GtkWidget* get_argument_rules_dialog (void);
 GtkWidget* get_decimals_dialog (void);
 GtkWidget* get_plot_dialog (void);
 GtkWidget* get_precision_dialog (void);
-GtkWidget* get_unit_dialog (void);
 GtkWidget* get_periodic_dialog (void);
 GtkWidget* create_InfoWidget(const gchar *text);
 

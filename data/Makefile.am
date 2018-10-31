@@ -2,10 +2,11 @@
 # data/Makefile.am for qalculate
 #
 
-noinst_DATA = argumentrules.ui csvexport.ui csvimport.ui datasetedit.ui datasets.ui decimals.ui \
+noinst_DATA = argumentrules.ui calendarconversion.ui csvexport.ui csvimport.ui datasetedit.ui datasets.ui decimals.ui \
 	functionedit.ui functions.ui main.ui matrix.ui matrixedit.ui namesedit.ui nbases.ui \
 	setbase.ui percentage.ui periodictable.ui plot.ui precision.ui preferences.ui simplefunctionedit.ui \
-	unitedit.ui units.ui unknownedit.ui variableedit.ui variables.ui ui.gresource.xml
+	unitedit.ui units.ui unknownedit.ui variableedit.ui variables.ui flags.gresource.xml ui.gresource.xml \
+	flags/*.png
 
 # this is for gnome
 

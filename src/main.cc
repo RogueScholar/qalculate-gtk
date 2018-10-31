@@ -56,7 +56,7 @@ MathFunction *f_expression;
 GtkBuilder *main_builder, *argumentrules_builder, *csvimport_builder, *csvexport_builder, *setbase_builder, *datasetedit_builder, *datasets_builder, *decimals_builder;
 GtkBuilder *functionedit_builder, *functions_builder, *matrixedit_builder, *matrix_builder, *namesedit_builder, *nbases_builder, *plot_builder, *precision_builder;
 GtkBuilder *preferences_builder, *unit_builder, *unitedit_builder, *units_builder, *unknownedit_builder, *variableedit_builder, *variables_builder;
-GtkBuilder *periodictable_builder, *simplefunctionedit_builder, *percentage_builder;
+GtkBuilder *periodictable_builder, *simplefunctionedit_builder, *percentage_builder, *calendarconversion_builder;
 
 Thread *view_thread, *command_thread;
 string calc_arg;
@@ -64,10 +64,11 @@ string calc_arg;
 bool do_timeout, check_expression_position;
 gint expression_position;
 
-QalculateDate last_version_check_date;
+QalculateDateTime last_version_check_date;
 
 static GOptionEntry options[] = {
 	{"new-instance", 'n', 0, G_OPTION_ARG_NONE, NULL, N_("Start a new instance of the application"), NULL},
+	{"version", 'v', 0, G_OPTION_ARG_NONE, NULL, N_("Display the application version"), NULL},
 	{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, NULL, N_("Expression to calculate"), N_("EXPRESSION")},
 	{NULL}
 };
@@ -270,7 +271,7 @@ void create_application(GtkApplication *app) {
 	g_free(gstr);
 	
 #ifdef _WIN32
-	QalculateDate next_version_check_date(last_version_check_date);
+	QalculateDateTime next_version_check_date(last_version_check_date);
 	next_version_check_date.addDays(14);
 	if(!next_version_check_date.isFutureDate()) g_idle_add(on_check_version_idle, NULL);
 #endif
@@ -294,6 +295,11 @@ static void qalculate_activate(GtkApplication *app) {
 
 static gint qalculate_handle_local_options(GtkApplication *app, GVariantDict *options_dict) {
 	gboolean b = false;
+	g_variant_dict_lookup(options_dict, "version", "b", &b);
+	if(b) {
+		g_printf(VERSION "\n");
+		return 0;
+	}
 	g_variant_dict_lookup(options_dict, "new-instance", "b", &b);
 	if(b) {
 		g_application_set_flags(G_APPLICATION(app), G_APPLICATION_NON_UNIQUE);
@@ -338,7 +344,7 @@ static gint qalculate_handle_local_options(GtkApplication *app, GVariantDict *op
 		}
 		fclose(file);
 		if(gstr_oldfile) {
-			g_mkdir(getLocalDir().c_str(), S_IRWXU);
+			recursiveMakeDir(getLocalDir());
 			move_file(gstr_oldfile, gstr_file);
 			g_free(gstr_oldfile);
 		}
