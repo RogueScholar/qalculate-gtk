@@ -1,3 +1,146 @@
+2018-10-22 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Set PrintOptions for messages
+	* Fix adaptive interval display (when +/- in expression)
+	* Nicer display of lambertw()
+
+2018-08-10 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Option to disable automatic conversion to local currency (when optimal conversion is activated)
+
+2018-08-08 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Polar and exponential complex number forms
+
+2018-08-07 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix theme warning with gtk version < 3.20
+	* Fix long numbers in RPN operation parse result
+	* Fix separator for last history item
+	* Remove function parsing hint for "to" expression
+	* Allow conversion of the current result using standalone "to" expression (e.g. type "to m" to convert current result to meter)
+
+2018-07-04 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* More fine-grained completion settings in preferences dialog
+	* Configurable completion popup delay
+	* Separate preferences into additional tabs
+
+2018-06-25 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Completion modes (for different levels of suggestions)
+	* "Keep open" option for insert function dialogs
+	* Hide "Insert Emoji" expression context menu item
+
+2018-06-20 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Do not retrieve exchange rates not needed
+	* Focus plot expression entry after graph added, modified or removed
+
+2018-06-13 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Show currency flag also when symbol (instead of ISO code) is used. The flag is placed after number if the currency is placed in front of the number with no space inbetween.
+
+2018-06-02 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Prefix completion suggestions and prefix handling in unit completion suggestions
+
+2018-05-31 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Do not enable OK button until values have changed, when editing definitions
+
+2018-05-30 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* "to base #" conversion
+
+2018-05-29 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Add duodecimal base and Roman numerals to number base conversion dialog
+
+2018-05-27 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Calendar conversion
+	* Add "to" conversion for display of numbers in roman, sexagesimal, or time format
+	* Completion suggestions for "to"-commands
+
+2018-05-22 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Partial fraction expansion
+
+2018-05-19 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Match title (and country for currencies) in completion suggestion list
+	* Show currency flag in result when currency code is used
+
+2018-05-02 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Search box for functions, variables, units, and long unit conversion lists
+	* Context menu for conversion unit list, and middle click for add to expression
+	* Use a searchable list view for convert to selection in unit manager
+
+2018-04-28 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Flags for currencies (flags collected by majumeke)
+
+2018-04-11 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix set (optimal) prefix when result is converted to composite unit (with prefix)
+
+2018-04-09 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* "to"-conversion for physical constants
+
+2018-04-08 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Support for "handle vector" argument property
+
+2018-04-03 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Time zone conversion
+
+2018-04-01 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Allow user to change decimal separator (and consequently argument separator)
+
+2018-03-30 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix function completion
+
+2018-03-20 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Use the currency menu structure for to button menu when currency unit in result,
+	  and the display all remaining units in the first more menu for other units
+	* List all currencies in conversion tab
+	* Hide hidden items (including extra currencies) from completion
+	* Use recursive directory creation
+	* Fix save/load of interval arithmetic state
+	* Add version command line option
+
+2018-02-19 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Add integrate() and dsolve() to button menu
+
+2018-02-07 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix history height not reducable
+	* Remove wrong tooltips from percentage calculation tool
+
+2018-02-05 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Resize result vertically when the window is resized, if keypad/history/conversion is hidden
+
+2018-01-22 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Plot line width setting
+
+2018-01-18 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Add y min/max to plot dialog
+	* Hide color/monochrome setting (has no effect)
+	* Increase default and maximum number of plot samples
+	* Allow resizing of plot dialog
+	* Add option to not copy digit separator
+
 2018-01-15 Hanna Knutsson <hanna.knutsson@protonmail.com>
 
 	* Implement completion only name property in GUI

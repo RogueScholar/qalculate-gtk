@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.1 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkWindow" id="completionwindow">
@@ -13,6 +13,9 @@
     <property name="deletable">False</property>
     <signal name="button-press-event" handler="on_completionwindow_button_press_event" swapped="no"/>
     <signal name="key-press-event" handler="on_completionwindow_key_press_event" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkFrame">
         <property name="visible">True</property>
@@ -48,9 +51,6 @@
           <placeholder/>
         </child>
       </object>
-    </child>
-    <child type="titlebar">
-      <placeholder/>
     </child>
   </object>
   <object class="GtkTextBuffer" id="expressionbuffer">
@@ -783,6 +783,9 @@
     <signal name="destroy-event" handler="on_gcalc_exit" swapped="no"/>
     <signal name="focus-in-event" handler="on_main_window_focus_in_event" swapped="no"/>
     <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkBox" id="top_vbox">
         <property name="visible">True</property>
@@ -974,6 +977,15 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="menu_item_show_calendarconversion_dialog">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Calendar Conversion</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_menu_item_show_calendarconversion_dialog_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="menu_item_show_percentage_dialog">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -1080,6 +1092,16 @@
                         <property name="label" translatable="yes">Simplify</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_menu_item_simplify_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menu_item_expand_partial_fractions">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Apply partial fraction decomposition to the current result.</property>
+                        <property name="label" translatable="yes">Expand Partial Fractions</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_menu_item_expand_partial_fractions_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -1442,6 +1464,45 @@ On: y - x</property>
                                 <property name="label" translatable="yes">Sort Minus Last</property>
                                 <property name="use_underline">True</property>
                                 <signal name="activate" handler="on_menu_item_sort_minus_last_activate" swapped="no"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSeparatorMenuItem">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkRadioMenuItem" id="menu_item_complex_rectangular">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Complex Rectangular Form</property>
+                                <property name="use_underline">True</property>
+                                <property name="active">True</property>
+                                <property name="draw_as_radio">True</property>
+                                <signal name="activate" handler="on_menu_item_complex_rectangular_activate" swapped="no"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkRadioMenuItem" id="menu_item_complex_exponential">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Complex Exponential Form</property>
+                                <property name="use_underline">True</property>
+                                <property name="draw_as_radio">True</property>
+                                <property name="group">menu_item_complex_rectangular</property>
+                                <signal name="activate" handler="on_menu_item_complex_exponential_activate" swapped="no"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkRadioMenuItem" id="menu_item_complex_polar">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Complex Polar Form</property>
+                                <property name="use_underline">True</property>
+                                <property name="draw_as_radio">True</property>
+                                <property name="group">menu_item_complex_rectangular</property>
+                                <signal name="activate" handler="on_menu_item_complex_polar_activate" swapped="no"/>
                               </object>
                             </child>
                           </object>
@@ -2613,7 +2674,7 @@ On: 1.1 * 1.1 ≈ 1.2</property>
                           <object class="GtkImage" id="expression_button_stop">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">stop</property>
+                            <property name="icon_name">process-stop</property>
                           </object>
                           <packing>
                             <property name="name">page4</property>
@@ -5544,6 +5605,9 @@ On: 1.1 * 1.1 ≈ 1.2</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="headers_visible">False</property>
+                                        <property name="enable_search">False</property>
+                                        <signal name="button-press-event" handler="on_convert_treeview_unit_button_press_event" swapped="no"/>
+                                        <signal name="popup-menu" handler="on_convert_treeview_unit_popup_menu" swapped="no"/>
                                         <child internal-child="selection">
                                           <object class="GtkTreeSelection"/>
                                         </child>
@@ -5553,6 +5617,20 @@ On: 1.1 * 1.1 ≈ 1.2</property>
                                   <packing>
                                     <property name="left_attach">0</property>
                                     <property name="top_attach">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSearchEntry" id="convert_entry_search">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="primary_icon_name">edit-find-symbolic</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">False</property>
+                                    <signal name="search-changed" handler="on_convert_entry_search_changed" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">0</property>
+                                    <property name="top_attach">2</property>
                                   </packing>
                                 </child>
                               </object>
@@ -5668,8 +5746,25 @@ This can be overridden by prepending the unit expression with "?" or "0".</prope
         </child>
       </object>
     </child>
-    <child type="titlebar">
-      <placeholder/>
+  </object>
+  <object class="GtkMenu" id="popup_menu_convert">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="popup_menu_convert_insert">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Add to Expression</property>
+        <signal name="activate" handler="on_popup_menu_convert_insert_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="popup_menu_convert_convert">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Convert to Unit</property>
+        <signal name="activate" handler="on_popup_menu_convert_convert_activate" swapped="no"/>
+      </object>
     </child>
   </object>
   <object class="GtkMenu" id="popup_menu_fx">
@@ -5796,6 +5891,16 @@ This can be overridden by prepending the unit expression with "?" or "0".</prope
       </object>
     </child>
     <child>
+      <object class="GtkMenuItem" id="popup_menu_item_expand_partial_fractions">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Apply partial fraction decomposition to the current result.</property>
+        <property name="label" translatable="yes">Expand Partial Fractions</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_menu_item_expand_partial_fractions_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
       <object class="GtkMenuItem" id="popup_menu_item_set_unknowns">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -5874,6 +5979,45 @@ This can be overridden by prepending the unit expression with "?" or "0".</prope
         <property name="use_underline">True</property>
         <property name="group">popup_menu_item_display_normal</property>
         <signal name="activate" handler="on_popup_menu_item_display_non_scientific_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separator_popup_complex">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="popup_menu_item_complex_rectangular">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Complex Rectangular Form</property>
+        <property name="use_underline">True</property>
+        <property name="active">True</property>
+        <property name="draw_as_radio">True</property>
+        <signal name="activate" handler="on_popup_menu_item_complex_rectangular_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="popup_menu_item_complex_exponential">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Complex Exponential Form</property>
+        <property name="use_underline">True</property>
+        <property name="draw_as_radio">True</property>
+        <property name="group">popup_menu_item_complex_rectangular</property>
+        <signal name="activate" handler="on_popup_menu_item_complex_exponential_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkRadioMenuItem" id="popup_menu_item_complex_polar">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Complex Polar Form</property>
+        <property name="use_underline">True</property>
+        <property name="draw_as_radio">True</property>
+        <property name="group">popup_menu_item_complex_rectangular</property>
+        <signal name="activate" handler="on_popup_menu_item_complex_polar_activate" swapped="no"/>
       </object>
     </child>
     <child>
@@ -6065,6 +6209,30 @@ This can be overridden by prepending the unit expression with "?" or "0".</prope
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Set Optimal Prefix</property>
         <signal name="activate" handler="on_menu_item_set_prefix_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separator_popup_display_date">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="popup_menu_item_to_utc">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Convert to UTC</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_popup_menu_item_to_utc_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="popup_menu_item_calendarconversion">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Convert to Calendars</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_popup_menu_item_calendarconversion_activate" swapped="no"/>
       </object>
     </child>
     <child>
