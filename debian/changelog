@@ -1,3 +1,13 @@
+qalculate-gtk (2.8.0-1) experimental; urgency=medium
+
+  * New upstream version
+  * Add appstream_install.patch to install metainfo file to
+    /usr/share/metainfo/ instead of /usr/share/appdata/
+  * Standards-Version 4.2.1
+  * Refresh years in debian/copyright
+
+ -- Vincent Legout <vlegout@debian.org>  Wed, 31 Oct 2018 06:10:41 +0100
+
 qalculate-gtk (2.2.1-1) experimental; urgency=medium
 
   * New upstream version (Closes: #890272, #877733)
