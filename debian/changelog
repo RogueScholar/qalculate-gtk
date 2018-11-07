@@ -5,8 +5,9 @@ qalculate-gtk (2.8.0-1) experimental; urgency=medium
     /usr/share/metainfo/ instead of /usr/share/appdata/
   * Standards-Version 4.2.1
   * Refresh years in debian/copyright
+  * Add VCS fields
 
- -- Vincent Legout <vlegout@debian.org>  Wed, 31 Oct 2018 06:10:41 +0100
+ -- Vincent Legout <vlegout@debian.org>  Wed, 07 Nov 2018 06:53:04 +0100
 
 qalculate-gtk (2.2.1-1) experimental; urgency=medium
 
