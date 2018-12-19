@@ -222,6 +222,8 @@ void edit_names(ExpressionItem *item = NULL, const gchar *namestr = NULL, GtkWid
 
 gchar *font_name_to_css(const char *font_name);
 
+void reload_history();
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -232,6 +234,7 @@ void units_convert_resize_popup();
 
 void *view_proc(void*);
 void *command_proc(void*);
+void on_history_resize(GtkWidget*, GdkRectangle*, gpointer);
 void on_message_bar_response(GtkInfoBar *w, gint response_id, gpointer);
 void on_expressiontext_populate_popup(GtkTextView *w, GtkMenu *menu, gpointer user_data);
 void on_combobox_base_changed(GtkComboBox *w, gpointer user_data);
