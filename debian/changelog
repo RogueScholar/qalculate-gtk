@@ -1,6 +1,7 @@
 qalculate-gtk (2.8.2-1) unstable; urgency=medium
 
   * New upstream version
+    - update libqalculate Build-Depends version
   * Fix debian/watch, use github example from uscan(1)
   * Standards-Version 4.3.0
 
