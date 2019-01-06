@@ -4,6 +4,7 @@ qalculate-gtk (2.8.2-1) unstable; urgency=medium
     - update libqalculate Build-Depends version
   * Fix debian/watch, use github example from uscan(1)
   * Standards-Version 4.3.0
+  * Add debian/gitlab-ci.yml
 
  -- Vincent Legout <vlegout@debian.org>  Sun, 06 Jan 2019 12:51:43 +0100
 
