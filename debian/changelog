@@ -2,8 +2,9 @@ qalculate-gtk (2.8.2-1) unstable; urgency=medium
 
   * New upstream version
   * Fix debian/watch, use github example from uscan(1)
+  * Standards-Version 4.3.0
 
- -- Vincent Legout <vlegout@debian.org>  Wed, 19 Dec 2018 07:46:45 +0100
+ -- Vincent Legout <vlegout@debian.org>  Sun, 06 Jan 2019 12:51:43 +0100
 
 qalculate-gtk (2.8.0-2) unstable; urgency=medium
 
