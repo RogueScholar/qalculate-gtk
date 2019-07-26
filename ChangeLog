@@ -1,3 +1,189 @@
+2019-07-17 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Hide "Abbreviate Names" in popup menu when appropriate and add separator
+	* Show custom base result popup menu item
+
+2019-07-15 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Improve subscripting of suffixes in history
+
+2019-07-13 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Add "to unicode" conversion
+
+2019-07-11 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Add support for text arguments when hiding default function values in output
+	* Fix italicization of symbol when function argument
+
+2019-06-30 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Support for bases > 36, negative bases, and non-integer bases
+	* Reduce length of expressions in messages (primarily when using high precision)
+	* Fix right-click action for cursor right and left keypad buttons
+
+2019-06-13 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Change programming keypad toggle button text/icon
+	* Add import definitions file to file menu
+	* Make most dialogs resizable
+
+2019-05-24 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix display of number in sexagesimal base or time format
+
+2019-05-17 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Keyboard shortcut for smart parentheses (Ctrl + parenthesis)
+
+2019-05-15 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix line breaks placed within Unicode characters in some cases
+	* Shorten extremely long lines (> 50 000 characters) in history
+	* Take into account line length (since line breaks now is dynamic) when calculating history limit
+	* Unmark parentheses when automatically selecting whole expression
+	* Only use bold parentheses highlighting if text width does not change
+	* Continuous delete when long-pressing DEL button
+
+2019-05-14 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix invalid text iterators on rapid input
+	* Menu item context menu for deletion and update of meta modes
+	* Do not require confirmation on deletion of variables and history bookmarks from context menu
+
+2019-05-11 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* History bookmarks and protect (from disappearing of the end of the list) option
+
+2019-05-09 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Show result in different number bases, in place of menus over keypad, when programming keypad is used
+
+2019-05-04 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Insert date dialog (from Edit menu and expression popup menu)
+	* Long press/right-click/middle-click actions on buttons in keypad
+	* "x =" button, and e on separate button in general left keypad
+	* New keypad buttons for moving cursor and cycling through expression history
+	* Move percent and raise buttons to the keypad on the right side, and add +/- button
+	* Add code() and char() to bases button menu, and rand() to mean button menu
+	* Request integer in dialog for root() and similar
+	* Do not show insert function dialog for button functions with two arguments
+
+2019-04-30 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Programming keypad
+	* Input base selection in expression popup menu
+
+2019-04-28 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Keypad in number bases dialog (related to issue #93)
+	* More unobtrusive warnings and errors in number bases dialog
+	* Bitwise operators and functions in number bases button menu
+
+2019-04-27 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Input ⊻ (XOR) unsing Ctrl+^ or just ^ (if selected in preferences)
+	* Do not show 0x prefix for hexadecimal numbers in result
+	* ⊻ symbol for XOR
+
+2019-04-26 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Recognize "factor" and "expand" commands at the beginning of the expression
+
+2019-04-24 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	 * Fix loading of adaptive interval display from mode
+	 * Factorize/expand improvements
+
+2019-04-14 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Rename "simplify" to "expand", to avoid confusion
+
+2019-04-09 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix loading of "Units in Physical Constants" from mode
+	* Fix loading of interval arithmetic setting
+	* Fix loading of "variable units" from mode
+
+2019-04-06 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Reverse order of previous functions, units, and variables in button menus
+
+2019-04-04 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Hide optional arguments with default value
+	* Show "optional" as placeholder text in insert function dialog
+	* Nicer display of derivative in output
+
+2019-04-03 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix ignore system language on Windows
+
+2019-04-01 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Hide current angle unit from result
+
+2019-03-27 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Improve/fix "to"-button menu
+	* Add dynamic convert to menu to result popup menu
+
+2019-03-25 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix dynamically updated button menus with gtk ~3.24.7
+
+2019-03-13 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix lost signal handling in conversion tab (fixes search, popup menu, delete icon, etc.)
+
+2019-03-11 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Ask if the user wants the change the default behaviour and allow multiple instances
+
+2019-03-04 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Layout fixes when formatting "= approx. 'a'"
+
+2019-03-02 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Two's complement for hexadecimal
+
+2019-02-28 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Option to ignore system language
+	* Show data object properties message in separate dialog
+
+2019-02-26 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Improved sorting of text string with unicode chars
+	* Hide unit and constant suffixes in result
+
+2019-02-17 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Replace decimal with exact decimal rational numbers when exact mode is activated using button
+
+2019-02-16 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Replacement approximation dropdown menu with exact toggle button
+	* Interval calculation method selection (use variance formula for interval calculation by default)
+
+2019-02-09 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Enable show ending zeroes by default
+
+2019-02-03 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Fix convert button
+
+2019-01-10 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Support UTC+/-hh[:mm] and CET time zone conversion (using "to")
+
+2019-01-06 Hanna Knutsson <hanna.knutsson@protonmail.com>
+
+	* Nicer display of physical unit relation constant names in completion list
+
 2018-12-02 Hanna Knutsson <hanna.knutsson@protonmail.com>
 
 	* Fix "gtk_tree_view_scroll_to_cell: assertion 'tree_view->priv->tree != NULL' failed"
