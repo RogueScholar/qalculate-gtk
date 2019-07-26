@@ -1,3 +1,10 @@
+qalculate-gtk (3.3.0-1) experimental; urgency=medium
+
+  * New upstream version
+    - update libqalculate Build-Depends version
+
+ -- Vincent Legout <vlegout@debian.org>  Fri, 26 Jul 2019 07:11:54 +0200
+
 qalculate-gtk (2.8.2-1) unstable; urgency=medium
 
   * New upstream version
