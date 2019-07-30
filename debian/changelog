@@ -6,6 +6,8 @@ qalculate-gtk (3.3.0-1) experimental; urgency=medium
     - remove debian/compat
     - use debhelper-compat (= 12) in debian/control
   * Move to machine-readable debian/copyright file
+  * Remove old transitional package qalculate
+    - remove now useless debian/qalculate-gtk.install
 
  -- Vincent Legout <vlegout@debian.org>  Fri, 26 Jul 2019 07:11:54 +0200
 
