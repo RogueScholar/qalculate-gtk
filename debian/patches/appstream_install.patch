@@ -5,7 +5,7 @@ Index: qalculate-gtk/data/Makefile.am
 ===================================================================
 --- qalculate-gtk.orig/data/Makefile.am
 +++ qalculate-gtk/data/Makefile.am
-@@ -17,7 +17,7 @@ desktopdir = $(datadir)/applications
+@@ -18,7 +18,7 @@ desktopdir = $(datadir)/applications
  
  appdata_IN_FILES = qalculate-gtk.appdata.xml.in
  appdata_DATA = $(appdata_IN_FILES:.xml.in=.xml)

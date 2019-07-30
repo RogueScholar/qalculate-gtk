@@ -1,6 +1,7 @@
 qalculate-gtk (3.3.0-1) experimental; urgency=medium
 
   * New upstream version
+    - refresh patches
     - update libqalculate Build-Depends version
   * Switch to debhelper 12
     - remove debian/compat
