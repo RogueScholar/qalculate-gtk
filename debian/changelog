@@ -9,7 +9,9 @@ qalculate-gtk (3.3.0-1) experimental; urgency=medium
   * Move to machine-readable debian/copyright file
   * Remove old transitional package qalculate
     - remove now useless debian/qalculate-gtk.install
-  * debian/rules: remove no longer needed override on dh_auto_test
+  * debian/rules:
+    - remove no longer needed override on dh_auto_test
+    - remove --with-libgnome=no, no longer used upstream
 
  -- Vincent Legout <vlegout@debian.org>  Fri, 26 Jul 2019 07:11:54 +0200
 
