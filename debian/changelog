@@ -12,6 +12,7 @@ qalculate-gtk (3.3.0-1) experimental; urgency=medium
   * debian/rules:
     - remove no longer needed override on dh_auto_test
     - remove --with-libgnome=no, no longer used upstream
+  * refresh debian/gitlab-ci.yml
 
  -- Vincent Legout <vlegout@debian.org>  Fri, 26 Jul 2019 07:11:54 +0200
 
