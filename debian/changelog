@@ -14,7 +14,7 @@ qalculate-gtk (3.3.0-1) experimental; urgency=medium
     - remove --with-libgnome=no, no longer used upstream
   * refresh debian/gitlab-ci.yml
 
- -- Vincent Legout <vlegout@debian.org>  Fri, 26 Jul 2019 07:11:54 +0200
+ -- Vincent Legout <vlegout@debian.org>  Wed, 31 Jul 2019 06:45:33 +0200
 
 qalculate-gtk (2.8.2-1) unstable; urgency=medium
 
