@@ -1,0 +1,2 @@
+# Don't store changes or alert to deletion of auto-generated files
+extend-diff-ignore = "^(data|doc|m4|src)?(/|/icons/|/flags/)?([A-Z]{3}|INSTALL|Makefile|aclocal|banner|config|libtool|lt~obsolete|ltmain|ltoptions|ltsugar|ltversion)(ure)?(\.h)?(\.c|\.guess|\.in|\.jpg|\.m4|\.png|\.pot|\.sh|\.sub|\.xcf|\.xml)?$"

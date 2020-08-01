@@ -2,7 +2,7 @@ Description: Fix spelling errors in source tree
 Author: Peter J. Mello <admin@petermello.net>
 Origin: other
 Forwarded: no
-Last-Update: 2020-08-01
+Last-Update: 2020-08-02
 
 --- a/data/unitedit.ui
 +++ b/data/unitedit.ui
@@ -15,6 +15,17 @@ Last-Update: 2020-08-01
  - The original unit will not be mixed with units with lower priority.
  - A lower value means higher priority.</property>
                          <property name="spacing">6</property>
+--- a/po/es.po
++++ b/po/es.po
+@@ -4473,7 +4473,7 @@ msgid "Open floating point conversion"
+ msgstr "Abrir conversión de punto flotante"
+ 
+ #: ../src/callbacks.cc:5531
+-msgid "Open calender conversion"
++msgid "Open calendar conversion"
+ msgstr "Abrir conversión de calendario"
+ 
+ #: ../src/callbacks.cc:5532
 --- a/po/nl.po
 +++ b/po/nl.po
 @@ -3296,7 +3296,7 @@ msgstr "<b>Relatie</b>"
@@ -35,6 +46,37 @@ Last-Update: 2020-08-01
  "simultaneous instances?"
  msgstr ""
  
+@@ -4536,7 +4536,7 @@ msgstr "Geen extra conversie"
+ 
+ #: ../src/callbacks.cc:5537
+ #, fuzzy
+-msgid "Open calender conversion"
++msgid "Open calendar conversion"
+ msgstr "Kalenderconversie"
+ 
+ #: ../src/callbacks.cc:5538
+--- a/po/pt_BR.po
++++ b/po/pt_BR.po
+@@ -4476,7 +4476,7 @@ msgid "Open floating point conversion"
+ msgstr "Abrir conversão de ponto flutuante"
+ 
+ #: ../src/callbacks.cc:5537
+-msgid "Open calender conversion"
++msgid "Open calendar conversion"
+ msgstr "Abrir conversão de calendário"
+ 
+ #: ../src/callbacks.cc:5538
+--- a/po/sl.po
++++ b/po/sl.po
+@@ -4450,7 +4450,7 @@ msgid "Open floating point conversion"
+ msgstr "Odpri orodje za pretvorbo plavajoče vejice"
+ 
+ #: ../src/callbacks.cc:5537
+-msgid "Open calender conversion"
++msgid "Open calendar conversion"
+ msgstr "Odpri orodje za pretvorbo koledarjev"
+ 
+ #: ../src/callbacks.cc:5538
 --- a/po/sv.po
 +++ b/po/sv.po
 @@ -3258,7 +3258,7 @@ msgstr "<b>Relation</b>"
@@ -55,6 +97,26 @@ Last-Update: 2020-08-01
  "simultaneous instances?"
  msgstr ""
  "Enligt förinställningar tillåts enbart en instans av %s.\n"
+@@ -4461,7 +4461,7 @@ msgid "Open floating point conversion"
+ msgstr "Öppna flyttalsomvandling"
+ 
+ #: ../src/callbacks.cc:5537
+-msgid "Open calender conversion"
++msgid "Open calendar conversion"
+ msgstr "Öppna kalenderomvandling"
+ 
+ #: ../src/callbacks.cc:5538
+--- a/src/callbacks.cc
++++ b/src/callbacks.cc
+@@ -5534,7 +5534,7 @@ const gchar *shortcut_type_text(int typ
+ 		case SHORTCUT_TYPE_PLOT: {return _("Open plot functions/data"); break;}
+ 		case SHORTCUT_TYPE_NUMBER_BASES: {return _("Open convert number bases"); break;}
+ 		case SHORTCUT_TYPE_FLOATING_POINT: {return _("Open floating point conversion"); break;}
+-		case SHORTCUT_TYPE_CALENDARS: {return _("Open calender conversion"); break;}
++		case SHORTCUT_TYPE_CALENDARS: {return _("Open calendar conversion"); break;}
+ 		case SHORTCUT_TYPE_PERCENTAGE_TOOL: {return _("Open percentage calculation tool"); break;}
+ 		case SHORTCUT_TYPE_PERIODIC_TABLE: {return _("Open periodic table"); break;}
+ 		case SHORTCUT_TYPE_UPDATE_EXRATES: {return _("Update exchange rates"); break;}
 --- a/src/main.cc
 +++ b/src/main.cc
 @@ -408,7 +408,7 @@ static gint qalculate_command_line(GtkAp

@@ -1,0 +1,3 @@
+usr/lib/*/qalculate-search-provider usr/libexec
+usr/share/dbus-1/services/io.github.Qalculate.SearchProvider.service
+usr/share/gnome-shell/search-providers/io.github.Qalculate.search-provider.ini

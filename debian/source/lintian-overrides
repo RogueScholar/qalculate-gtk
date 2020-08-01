@@ -1,2 +1,8 @@
 # Upstream release tarballs are not cryptographically signed
 debian-watch-does-not-check-gpg-signature
+
+# False positive from lintian's failure to correctly parse YAML nested mappings
+upstream-metadata-missing-bug-tracking
+
+# Canonical lacks the skill the backport a more current debhelper to Xenial LTS
+package-uses-old-debhelper-compat-version 10

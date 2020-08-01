@@ -1,0 +1,7 @@
+usr/bin/qalculate-gtk
+usr/share/applications/io.github.Qalculate.GTK.desktop
+usr/share/doc/qalculate-gtk/html
+usr/share/icons/hicolor/*/apps/io.github.Qalculate.png
+usr/share/icons/hicolor/scalable/apps/io.github.Qalculate.svg
+usr/share/locale/*/LC_MESSAGES/qalculate-gtk.mo
+usr/share/metainfo/io.github.Qalculate.GTK.metainfo.xml

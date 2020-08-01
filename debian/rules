@@ -1,12 +1,20 @@
 #!/usr/bin/make -f
 # -*- makefile-gmake -*-
 
-DEB_BUILD_MAINT_OPTIONS ::= hardening=+all
-DH_VERBOSE              ::= 1
-LC_ALL                  ::= C.UTF-8
-export DEB_BUILD_MAINT_OPTIONS DH_VERBOSE LC_ALL
+DEB_BUILD_MAINT_OPTIONS   ::= hardening=+all
+DEB_CFLAGS_MAINT_APPEND   ::= -fstack-clash-protection --param=ssp-buffer-size=4
+DEB_CXXFLAGS_MAINT_APPEND ::= -fstack-clash-protection --param=ssp-buffer-size=4
+DH_VERBOSE                ::= 1
+VEND_VER                  ::= $(shell lsb_release -rs | cut -c-5)
+DPKG_EXPORT_BUILDFLAGS    ::= 1
 
-DPKG_EXPORT_BUILDFLAGS  ::= 1
+ifneq ($(VEND_VER),$(shell printf "$(VEND_VER)\n17.10\n" | sort -g | head -1))
+	DEB_BUILD_MAINT_OPTIONS += future=+lfs reproducible=+fixfilepath
+endif
+
+export DEB_BUILD_MAINT_OPTIONS DEB_CFLAGS_MAINT_APPEND \
+		DEB_CXXFLAGS_MAINT_APPEND DH_VERBOSE
+
 include /usr/share/dpkg/default.mk
 
 
@@ -14,9 +22,21 @@ include /usr/share/dpkg/default.mk
 	dh $@ --verbose --with autoreconf
 
 
-override_dh_auto_clean:
-	rm -f config.log data/qalculate-gtk.appdata.xml data/qalculate-gtk.desktop \
-		src/flags.c src/ui.c
-	dh_auto_clean -O-v --
+override_dh_auto_configure:
+	dh_auto_configure -O--verbose -- --with-webkitgtk \
+		$(shell dpkg-buildflags --export=cmdline)
+
+override_dh_auto_install:
+	dh_auto_install -O--verbose
+	find $(CURDIR)/debian/tmp/usr/share/icons -name "qalculate.png" -execdir \
+		mmv -rptv -- 'qalculate.png' 'io.github.Qalculate.png' \;
+	find $(CURDIR)/debian/tmp/usr/share/icons -name "qalculate.svg" -execdir \
+		mmv -rptv -- 'qalculate.svg' 'io.github.Qalculate.svg' \;
+	find $(CURDIR)/debian/tmp/usr/share/metainfo -name \
+		"qalculate-gtk.appdata.xml" -execdir mmv -rptv -- \
+		'qalculate-gtk.appdata.xml' 'io.github.Qalculate.GTK.metainfo.xml' \;
+	find $(CURDIR)/debian/tmp/usr/share/applications -name \
+		"qalculate-gtk.desktop" -execdir mmv -rptv -- \
+		'qalculate-gtk.desktop' 'io.github.Qalculate.GTK.desktop' \;
 
 override_dh_auto_test:

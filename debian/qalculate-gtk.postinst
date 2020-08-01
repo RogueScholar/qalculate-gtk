@@ -5,4 +5,6 @@ set -e
 update-alternatives --install /usr/bin/qalculate qalculate \
 	/usr/bin/qalculate-gtk 20
 
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor
+
 #DEBHELPER#

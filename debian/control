@@ -2,10 +2,11 @@ Source: qalculate-gtk
 Section: math
 Priority: optional
 Maintainer: Peter J. Mello <admin@petermello.net>
-Build-Depends: debhelper (>= 10~), libqalculate-dev (>= 3.12.0),
- gettext (>= 0.19.6~), libgdk-pixbuf2.0-dev, libglade2-dev,
- libglib2.0-dev (>= 2.4~), libgmp-dev, libgtk-3-dev (>= 3.12~), libgtk2.0-dev,
- libwebkit2gtk-4.0-dev, libxml2-dev
+Build-Depends: debhelper (>= 10~), libqalculate-dev (>= 3.8.0~),
+ gettext (>= 0.19.6~), intltool, mmv, libgdk-pixbuf2.0-dev,
+ libglib2.0-dev (>= 2.4~), libglib2.0-dev-bin, libgmp-dev,
+ libgtk-3-dev (>= 3.10~), libgtk2.0-dev, libwebkit2gtk-4.0-dev, libxml2-dev,
+ libxml2-utils
 Standards-Version: 4.5.0
 Homepage: https://qalculate.github.io/
 Vcs-Git: https://github.com/Qalculate/qalculate-gtk.git
@@ -26,3 +27,13 @@ Description: Powerful and easy to use desktop calculator - GTK+ version
  buttons).
  .
  This package contains the GTK+ user interface of qalculate.
+
+Package: gnome-shell-extension-qalculate
+Architecture: any
+Section: gnome
+Depends: qalc (>= 3.8.0~), gnome-shell, ${shlibs:Depends}, ${misc:Depends}
+Description: Qalculate! extension for GNOME Shell
+ GNOME Shell extension that adds a desktop search provider that performs
+ mathematical calculations, backed by the expansive feature set of libqalculate.
+ Perform simple arithmetic, solve multi-variable equations or plot functions all
+ from the ultra-convenient GNOME graphical command prompt.
