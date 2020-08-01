@@ -1,0 +1,28 @@
+Source: qalculate-gtk
+Section: math
+Priority: optional
+Maintainer: Peter J. Mello <admin@petermello.net>
+Build-Depends: debhelper (>= 10~), libqalculate-dev (>= 3.12.0),
+ gettext (>= 0.19.6~), libgdk-pixbuf2.0-dev, libglade2-dev,
+ libglib2.0-dev (>= 2.4~), libgmp-dev, libgtk-3-dev (>= 3.12~), libgtk2.0-dev,
+ libwebkit2gtk-4.0-dev, libxml2-dev
+Standards-Version: 4.5.0
+Homepage: https://qalculate.github.io/
+Vcs-Git: https://github.com/Qalculate/qalculate-gtk.git
+Vcs-Browser: https://github.com/Qalculate/qalculate-gtk
+Rules-Requires-Root: no
+
+Package: qalculate-gtk
+Architecture: any
+Depends: qalc, ${shlibs:Depends}, ${misc:Depends}
+Recommends: gnuplot-x11 | gnuplot-nox | gnuplot-qt
+Breaks: qalculate (<< 0.8)
+Provides: qalculate
+Description: Powerful and easy to use desktop calculator - GTK+ version
+ Qalculate! is small and simple to use but with much power and versatility
+ underneath.  Features include customizable functions, units, arbitrary
+ precision, plotting, and a graphical interface that uses a one-line
+ fault-tolerant expression entry (although it supports optional traditional
+ buttons).
+ .
+ This package contains the GTK+ user interface of qalculate.

@@ -1,0 +1,68 @@
+Description: Fix spelling errors in source tree
+Author: Peter J. Mello <admin@petermello.net>
+Origin: other
+Forwarded: no
+Last-Update: 2020-08-01
+
+--- a/data/unitedit.ui
++++ b/data/unitedit.ui
+@@ -730,7 +730,7 @@ For non-linear relations use \x for the
+                       <object class="GtkBox" id="hbox1">
+                         <property name="visible">True</property>
+                         <property name="can_focus">False</property>
+-                        <property name="tooltip_text" translatable="yes">- Decides which units the base unit is mixed with if multple options exist.
++                        <property name="tooltip_text" translatable="yes">- Decides which units the base unit is mixed with if multiple options exist.
+ - The original unit will not be mixed with units with lower priority.
+ - A lower value means higher priority.</property>
+                         <property name="spacing">6</property>
+--- a/po/nl.po
++++ b/po/nl.po
+@@ -3296,7 +3296,7 @@ msgstr "<b>Relatie</b>"
+ 
+ #: ../data/unitedit.ui.h:39
+ msgid ""
+-"- Decides which units the base unit is mixed with if multple options exist.\n"
++"- Decides which units the base unit is mixed with if multiple options exist.\n"
+ "- The original unit will not be mixed with units with lower priority.\n"
+ "- A lower value means higher priority."
+ msgstr ""
+@@ -3534,7 +3534,7 @@ msgid ""
+ "(variables, functions, etc.), mode, preferences, and history of the last "
+ "closed window will be saved.\n"
+ "\n"
+-"Do you, despite this, want to change the default bahvior and allow multiple "
++"Do you, despite this, want to change the default behavior and allow multiple "
+ "simultaneous instances?"
+ msgstr ""
+ 
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -3258,7 +3258,7 @@ msgstr "<b>Relation</b>"
+ 
+ #: ../data/unitedit.ui.h:39
+ msgid ""
+-"- Decides which units the base unit is mixed with if multple options exist.\n"
++"- Decides which units the base unit is mixed with if multiple options exist.\n"
+ "- The original unit will not be mixed with units with lower priority.\n"
+ "- A lower value means higher priority."
+ msgstr ""
+@@ -3499,7 +3499,7 @@ msgid ""
+ "(variables, functions, etc.), mode, preferences, and history of the last "
+ "closed window will be saved.\n"
+ "\n"
+-"Do you, despite this, want to change the default bahvior and allow multiple "
++"Do you, despite this, want to change the default behavior and allow multiple "
+ "simultaneous instances?"
+ msgstr ""
+ "Enligt förinställningar tillåts enbart en instans av %s.\n"
+--- a/src/main.cc
++++ b/src/main.cc
+@@ -408,7 +408,7 @@ static gint qalculate_command_line(GtkAp
+ 			gtk_text_buffer_set_text(GTK_TEXT_BUFFER(gtk_builder_get_object(main_builder, "expressionbuffer")), calc_arg.c_str(), -1);
+ 			execute_expression();
+ 		} else if(allow_multiple_instances < 0) {
+-			GtkWidget *edialog = gtk_message_dialog_new(GTK_WINDOW(gtk_builder_get_object(main_builder, "main_window")), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, _("By default, only one instance (one main window) of %s is allowed.\n\nIf multiple instances are opened simultaneously, only the definitions (variables, functions, etc.), mode, preferences, and history of the last closed window will be saved.\n\nDo you, despite this, want to change the default bahvior and allow multiple simultaneous instances?"), "Qalculate!");
++			GtkWidget *edialog = gtk_message_dialog_new(GTK_WINDOW(gtk_builder_get_object(main_builder, "main_window")), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, _("By default, only one instance (one main window) of %s is allowed.\n\nIf multiple instances are opened simultaneously, only the definitions (variables, functions, etc.), mode, preferences, and history of the last closed window will be saved.\n\nDo you, despite this, want to change the default behavior and allow multiple simultaneous instances?"), "Qalculate!");
+ 			allow_multiple_instances = gtk_dialog_run(GTK_DIALOG(edialog)) == GTK_RESPONSE_YES;
+ 			save_preferences(false);
+ 			gtk_widget_destroy(edialog);

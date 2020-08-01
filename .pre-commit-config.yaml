@@ -1,0 +1,26 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 5372f44b858f6eef834d9632e9960c39c296d448
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: detect-private-key
+      - id: check-yaml
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-byte-order-marker
+      - id: check-added-large-files
+  - repo: https://github.com/prettier/prettier
+    rev: 5004661ef18b906840f7c31234e7b57afadfa06e
+    hooks:
+      - id: prettier
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 2.1.4
+    hooks:
+      - id: markdownlint
+      - id: shellcheck
+        args: [-xa -Calways -f checkstyle]
+      - id: shfmt
+        args: [-d -s -i 2 -ci -kp]

@@ -1,0 +1,9 @@
+Document: qalculate-gtk
+Title: Qalculate!
+Author: Hanna Knutsson
+Abstract: Documentation of Qalculate! in HTML format
+Section: Science/Mathematics
+
+Format: HTML
+Index: /usr/share/doc/qalculate-gtk/html/index.html
+Files: /usr/share/doc/qalculate-gtk/html/*.html

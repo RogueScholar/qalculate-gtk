@@ -1,0 +1,12 @@
+{
+  "default": true,
+  "heading-style": "atx",
+  "ul-indent": 4,
+  "no-trailing-spaces": true,
+  "line-length": 80,
+  "no-duplicate-heading": "siblings_only",
+  "no-inline-html": false,
+  "hr-style": "---",
+  "code-block-style": "fenced",
+  "code-fence-style": "backtick"
+}

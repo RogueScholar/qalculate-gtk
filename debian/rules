@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+# -*- makefile-gmake -*-
+
+DEB_BUILD_MAINT_OPTIONS ::= hardening=+all
+DH_VERBOSE              ::= 1
+LC_ALL                  ::= C.UTF-8
+export DEB_BUILD_MAINT_OPTIONS DH_VERBOSE LC_ALL
+
+DPKG_EXPORT_BUILDFLAGS  ::= 1
+include /usr/share/dpkg/default.mk
+
+
+%:
+	dh $@ --verbose --with autoreconf
+
+
+override_dh_auto_clean:
+	rm -f config.log data/qalculate-gtk.appdata.xml data/qalculate-gtk.desktop \
+		src/flags.c src/ui.c
+	dh_auto_clean -O-v --
+
+override_dh_auto_test:
