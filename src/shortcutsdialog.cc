@@ -27,9 +27,9 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "modes.h"
+#include "mainwindow.h"
 #include "shortcutsdialog.h"
-
-#include "unordered_map_define.h"
 
 using std::string;
 using std::cout;
@@ -41,12 +41,10 @@ GtkBuilder *shortcuts_builder = NULL;
 GtkWidget *tShortcuts, *tShortcutsType;
 GtkListStore *tShortcuts_store, *tShortcutsType_store;
 
-extern unordered_map<guint64, keyboard_shortcut> keyboard_shortcuts;
-extern vector<mode_struct> modes;
-extern bool default_shortcuts;
-
 guint32 current_shortcut_key = 0;
 guint32 current_shortcut_modifier = 0;
+
+unordered_map<guint64, keyboard_shortcut> keyboard_shortcuts;
 
 void on_tShortcuts_selection_changed(GtkTreeSelection *treeselection, gpointer user_data);
 void on_tShortcutsType_selection_changed(GtkTreeSelection *treeselection, gpointer user_data);
@@ -139,7 +137,7 @@ gboolean on_shortcut_key_released(GtkWidget *w, GdkEventKey *event, gpointer) {
 	gtk_dialog_response(GTK_DIALOG(w), GTK_RESPONSE_OK);
 	return TRUE;
 }
-gboolean on_shortcut_key_pressed(GtkWidget *w, GdkEventKey *event, gpointer) {
+gboolean on_shortcut_key_pressed(GtkWidget*, GdkEventKey *event, gpointer) {
 	guint state = CLEAN_MODIFIERS(event->state);
 	FIX_ALT_GR
 	string str = "<span size=\"large\">";
@@ -180,13 +178,14 @@ bool get_keyboard_shortcut(GtkWindow *parent) {
 	gtk_widget_destroy(dialog);
 	return false;
 }
-void on_shortcuts_entry_value_activate(GtkEntry*, gpointer d) {
+void on_shortcuts_entry_value_activate(GtkEntry*, gpointer) {
 	gtk_dialog_response(GTK_DIALOG(gtk_builder_get_object(shortcuts_builder, "shortcuts_type_dialog")), GTK_RESPONSE_ACCEPT);
 }
 void on_shortcuts_type_treeview_row_activated(GtkTreeView*, GtkTreePath*, GtkTreeViewColumn*, gpointer) {
 	if(gtk_widget_get_sensitive(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")))) gtk_widget_grab_focus(gtk_stack_get_visible_child(GTK_STACK(gtk_builder_get_object(shortcuts_builder, "shortcuts_stack_value"))));
 	else gtk_dialog_response(GTK_DIALOG(gtk_builder_get_object(shortcuts_builder, "shortcuts_type_dialog")), GTK_RESPONSE_ACCEPT);
 }
+extern bool default_shortcuts;
 void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 	GtkWidget *d = GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_type_dialog"));
 	update_window_properties(d);
@@ -214,7 +213,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 			if(type != SHORTCUT_TYPE_TEXT) remove_blank_ends(value);
 			if(value.empty()) {
 				gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-				show_message(_("Empty value."), d);
+				show_message(_("Empty value."), GTK_WINDOW(d));
 				goto run_shortcuts_dialog;
 			}
 			switch(type) {
@@ -223,7 +222,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 					if(value.length() > 2 && value.substr(value.length() - 2, 2) == "()") value = value.substr(0, value.length() - 2);
 					if(!CALCULATOR->getActiveFunction(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Function not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Function not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -231,7 +230,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 				case SHORTCUT_TYPE_VARIABLE: {
 					if(!CALCULATOR->getActiveVariable(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Variable not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Variable not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -239,22 +238,15 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 				case SHORTCUT_TYPE_UNIT: {
 					if(!CALCULATOR->getActiveUnit(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unit not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unit not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
 				}
 				case SHORTCUT_TYPE_META_MODE: {
-					bool b = false;
-					for(size_t i = 0; i < modes.size(); i++) {
-						if(equalsIgnoreCase(modes[i].name, value)) {
-							b = true;
-							break;
-						}
-					}
-					if(!b) {
+					if(mode_index(value, false) == (size_t) -1) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Mode not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Mode not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -266,7 +258,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 					base_from_string(value, base, nbase, type == SHORTCUT_TYPE_INPUT_BASE);
 					if(base == BASE_CUSTOM && nbase.isZero()) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -278,7 +270,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 					int v = s2i(value);
 					if(value.find_first_not_of(SPACE NUMBERS) != string::npos || v < -1 || (type == SHORTCUT_TYPE_PRECISION && v < 2)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported value."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported value."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -306,7 +298,7 @@ void on_shortcuts_button_new_clicked(GtkButton*, gpointer) {
 			guint64 id = (guint64) ks.key + (guint64) G_MAXUINT32 * (guint64) ks.modifier;
 			unordered_map<guint64, keyboard_shortcut>::iterator it = keyboard_shortcuts.find(id);
 			if(it != keyboard_shortcuts.end()) {
-				if(!ask_question(_("The key combination is already in use.\nDo you wish to replace the current action?"), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_type_dialog")))) {
+				if(!ask_question(_("The key combination is already in use.\nDo you wish to replace the current action?"), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_type_dialog")))) {
 					goto ask_keyboard_shortcut;
 				}
 				GtkTreeIter iter;
@@ -374,7 +366,7 @@ void on_shortcuts_button_edit_clicked(GtkButton*, gpointer) {
 			bool b_replace = false;
 			int old_type = -1;
 			if(it != keyboard_shortcuts.end()) {
-				if(it == it_old || !ask_question(_("The key combination is already in use.\nDo you wish to replace the current action?"), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")))) {
+				if(it == it_old || !ask_question(_("The key combination is already in use.\nDo you wish to replace the current action?"), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")))) {
 					return;
 				}
 				if(it->second.type.size() == 1) old_type = it->second.type[0];
@@ -464,7 +456,7 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 			if(type != SHORTCUT_TYPE_TEXT) remove_blank_ends(value);
 			if(value.empty()) {
 				gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-				show_message(_("Empty value."), d);
+				show_message(_("Empty value."), GTK_WINDOW(d));
 				goto run_shortcuts_dialog;
 			}
 			switch(type) {
@@ -473,7 +465,7 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 					if(value.length() > 2 && value.substr(value.length() - 2, 2) == "()") value = value.substr(0, value.length() - 2);
 					if(!CALCULATOR->getActiveFunction(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Function not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Function not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -481,7 +473,7 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 				case SHORTCUT_TYPE_VARIABLE: {
 					if(!CALCULATOR->getActiveVariable(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Variable not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Variable not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -489,22 +481,15 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 				case SHORTCUT_TYPE_UNIT: {
 					if(!CALCULATOR->getActiveUnit(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unit not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unit not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
 				}
 				case SHORTCUT_TYPE_META_MODE: {
-					bool b = false;
-					for(size_t i = 0; i < modes.size(); i++) {
-						if(equalsIgnoreCase(modes[i].name, value)) {
-							b = true;
-							break;
-						}
-					}
-					if(!b) {
+					if(mode_index(value, false) == (size_t) -1) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Mode not found."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Mode not found."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -516,7 +501,7 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 					base_from_string(value, base, nbase, type == SHORTCUT_TYPE_INPUT_BASE);
 					if(base == BASE_CUSTOM && nbase.isZero()) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -528,7 +513,7 @@ void on_shortcuts_treeview_row_activated(GtkTreeView *w, GtkTreePath *path, GtkT
 					int v = s2i(value);
 					if(value.find_first_not_of(SPACE NUMBERS) != string::npos || v < -1 || (type == SHORTCUT_TYPE_PRECISION && v < 2)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported value."), GTK_WIDGET(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported value."), GTK_WINDOW(gtk_builder_get_object(shortcuts_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;

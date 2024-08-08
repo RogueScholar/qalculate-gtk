@@ -28,14 +28,14 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
+#include "expressionedit.h"
 #include "conversionview.h"
 
 using std::string;
 using std::cout;
 using std::vector;
 using std::endl;
-
-#include "unordered_map_define.h"
 
 extern GtkBuilder *main_builder;
 
@@ -50,14 +50,28 @@ string selected_unit_selector_category;
 bool block_unit_selector_convert = false;
 int block_conversion_category_switch = 0;
 bool keep_unit_selection = false;
+bool continuous_conversion = false, set_missing_prefixes = false;
 unordered_map<string, GtkTreeIter> convert_category_map;
-
-extern unordered_map<string, cairo_surface_t*> flag_surfaces;
 
 void on_convert_entry_search_changed(GtkEntry *w, gpointer);
 void on_tUnitSelector_selection_changed(GtkTreeSelection *treeselection, gpointer);
 void on_tUnitSelectorCategories_selection_changed(GtkTreeSelection *treeselection, gpointer);
 void convert_from_convert_entry_unit();
+
+bool read_conversion_view_settings_line(string &svar, string&, int &v) {
+	if(svar == "continuous_conversion") {
+		continuous_conversion = v;
+	} else if(svar == "set_missing_prefixes") {
+		set_missing_prefixes = v;
+	} else {
+		return false;
+	}
+	return true;
+}
+void write_conversion_view_settings(FILE *file) {
+	fprintf(file, "continuous_conversion=%i\n", continuous_conversion);
+	fprintf(file, "set_missing_prefixes=%i\n", set_missing_prefixes);
+}
 
 void update_unit_selector_tree() {
 	GtkTreeIter iter, iter2, iter3;
@@ -314,7 +328,7 @@ void on_popup_menu_convert_convert_activate(GtkMenuItem*, gpointer) {
 gboolean on_convert_treeview_unit_button_press_event(GtkWidget *w, GdkEventButton *event, gpointer) {
 	GtkTreePath *path = NULL;
 	if(event->type == GDK_BUTTON_PRESS && event->button == 2) {
-		if(b_busy) return TRUE;
+		if(calculator_busy()) return TRUE;
 		if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), event->x, event->y, &path, NULL, NULL, NULL)) {
 			GtkTreeIter iter;
 			if(gtk_tree_model_get_iter(tUnitSelector_store_filter, &iter, path)) {
@@ -327,7 +341,7 @@ gboolean on_convert_treeview_unit_button_press_event(GtkWidget *w, GdkEventButto
 			gtk_tree_path_free(path);
 		}
 	} else if(gdk_event_triggers_context_menu((GdkEvent*) event) && event->type == GDK_BUTTON_PRESS) {
-		if(b_busy) return TRUE;
+		if(calculator_busy()) return TRUE;
 		if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(w), event->x, event->y, &path, NULL, NULL, NULL)) {
 			GtkTreeIter iter;
 			if(gtk_tree_model_get_iter(tUnitSelector_store_filter, &iter, path)) {
@@ -349,7 +363,7 @@ gboolean on_convert_treeview_unit_button_press_event(GtkWidget *w, GdkEventButto
 	return FALSE;
 }
 gboolean on_convert_treeview_unit_popup_menu(GtkWidget*, gpointer) {
-	if(b_busy) return TRUE;
+	if(calculator_busy()) return TRUE;
 	popup_convert_unit = NULL;
 	update_convert_popup();
 #if GTK_MAJOR_VERSION > 3 || GTK_MINOR_VERSION >= 22
@@ -458,9 +472,18 @@ void update_conversion_view_selection(const MathStructure *m) {
 void focus_conversion_entry() {
 	gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(main_builder, "convert_entry_unit")));
 }
-const gchar *current_conversion_expression() {
-	return gtk_entry_get_text(GTK_ENTRY(gtk_builder_get_object(main_builder, "convert_entry_unit")));
+string current_conversion_expression() {
+	ParseOptions pa = evalops.parse_options; pa.base = 10;
+	string ceu_str = CALCULATOR->unlocalizeExpression(gtk_entry_get_text(GTK_ENTRY(gtk_builder_get_object(main_builder, "convert_entry_unit"))), pa);
+	remove_blank_ends(ceu_str);
+	if(set_missing_prefixes && !ceu_str.empty()) {
+		if(!ceu_str.empty() && ceu_str[0] != '0' && ceu_str[0] != '?' && ceu_str[0] != '+' && ceu_str[0] != '-' && (ceu_str.length() == 1 || ceu_str[1] != '?')) {
+			ceu_str = "?" + ceu_str;
+		}
+	}
+	return ceu_str;
 }
+bool conversionview_continuous_conversion() {return continuous_conversion;}
 
 void create_conversion_view() {
 	tUnitSelectorCategories = GTK_WIDGET(gtk_builder_get_object(main_builder, "convert_treeview_category"));
@@ -500,5 +523,5 @@ void create_conversion_view() {
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_builder, "convert_button_continuous_conversion")), continuous_conversion);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_builder, "convert_button_set_missing_prefixes")), set_missing_prefixes);
 
-	gtk_builder_add_callback_symbols(main_builder, "on_convert_entry_unit_activate", G_CALLBACK(on_convert_entry_unit_activate), "on_convert_entry_unit_changed", G_CALLBACK(on_convert_entry_unit_changed), "on_convert_entry_unit_icon_release", G_CALLBACK(on_convert_entry_unit_icon_release), "on_convert_treeview_category_row_expanded", G_CALLBACK(on_convert_treeview_category_row_expanded), "on_convert_treeview_unit_button_press_event", G_CALLBACK(on_convert_treeview_unit_button_press_event), "on_convert_treeview_unit_popup_menu", G_CALLBACK(on_convert_treeview_unit_popup_menu), "on_convert_entry_search_changed", G_CALLBACK(on_convert_entry_search_changed), "on_convert_button_convert_clicked", G_CALLBACK(on_convert_button_convert_clicked), "on_convert_button_continuous_conversion_toggled", G_CALLBACK(on_convert_button_continuous_conversion_toggled), "on_convert_button_set_missing_prefixes_toggled", G_CALLBACK(on_convert_button_set_missing_prefixes_toggled), "on_popup_menu_convert_insert_activate", G_CALLBACK(on_popup_menu_convert_insert_activate), "on_popup_menu_convert_convert_activate", G_CALLBACK(on_popup_menu_convert_convert_activate), NULL);
+	gtk_builder_add_callback_symbols(main_builder, "on_convert_entry_unit_activate", G_CALLBACK(on_convert_entry_unit_activate), "on_convert_entry_unit_changed", G_CALLBACK(on_convert_entry_unit_changed), "on_convert_entry_unit_icon_release", G_CALLBACK(on_convert_entry_unit_icon_release), "on_convert_treeview_category_row_expanded", G_CALLBACK(on_convert_treeview_category_row_expanded), "on_convert_treeview_unit_button_press_event", G_CALLBACK(on_convert_treeview_unit_button_press_event), "on_convert_treeview_unit_popup_menu", G_CALLBACK(on_convert_treeview_unit_popup_menu), "on_convert_entry_search_changed", G_CALLBACK(on_convert_entry_search_changed), "on_convert_button_convert_clicked", G_CALLBACK(on_convert_button_convert_clicked), "on_convert_button_continuous_conversion_toggled", G_CALLBACK(on_convert_button_continuous_conversion_toggled), "on_convert_button_set_missing_prefixes_toggled", G_CALLBACK(on_convert_button_set_missing_prefixes_toggled), "on_popup_menu_convert_insert_activate", G_CALLBACK(on_popup_menu_convert_insert_activate), "on_popup_menu_convert_convert_activate", G_CALLBACK(on_popup_menu_convert_convert_activate), "on_unit_entry_key_press_event", G_CALLBACK(on_unit_entry_key_press_event), NULL);
 }

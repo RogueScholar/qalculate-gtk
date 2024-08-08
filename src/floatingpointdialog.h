@@ -14,6 +14,9 @@
 
 #include <gtk/gtk.h>
 
-void convert_floatingpoint(const gchar *initial_expression, bool b_result, GtkWindow *parent);
+class MathStructure;
+
+void convert_floatingpoint(const MathStructure *initial_value, GtkWindow *parent);
+void convert_floatingpoint(const gchar *initial_expression, int base, GtkWindow *parent);
 
 #endif /* FLOATINGPOINT_DIALOG_H */

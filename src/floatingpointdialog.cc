@@ -27,6 +27,8 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
+#include "expressionedit.h"
 #include "floatingpointdialog.h"
 
 using std::string;
@@ -60,7 +62,7 @@ unsigned int get_fp_sgnpos() {
 	return 0;
 }
 
-void update_fp_entries(string sbin, int base, Number *decnum = NULL);
+void update_fp_entries(string sbin, int base, const Number *decnum = NULL);
 void on_fp_entry_dec_changed(GtkEditable *editable, gpointer) {
 	if(changing_in_fp_dialog) return;
 	string str = gtk_entry_get_text(GTK_ENTRY(editable));
@@ -146,7 +148,7 @@ void on_fp_entry_hex_changed(GtkEditable *editable, gpointer) {
 	CALCULATOR->clearMessages();
 	unblock_error();
 }
-void update_fp_entries(string sbin, int base, Number *decnum) {
+void update_fp_entries(string sbin, int base, const Number *decnum) {
 	unsigned int bits = get_fp_bits();
 	unsigned int expbits = get_fp_expbits();
 	unsigned int sgnpos = get_fp_sgnpos();
@@ -312,12 +314,10 @@ void fp_insert_text(GtkWidget *w, const gchar *text) {
 	gtk_editable_select_region(GTK_EDITABLE(w), pos, pos);
 }
 
-gboolean on_floatingpoint_dialog_key_press_event(GtkWidget *o, GdkEventKey *event, gpointer) {
-	if(b_busy) {
+gboolean on_floatingpoint_dialog_key_press_event(GtkWidget*, GdkEventKey *event, gpointer) {
+	if(calculator_busy()) {
 		if(event->keyval == GDK_KEY_Escape) {
-			if(b_busy_expression) on_abort_calculation(NULL, 0, NULL);
-			else if(b_busy_result) on_abort_display(NULL, 0, NULL);
-			else if(b_busy_command) on_abort_command(NULL, 0, NULL);
+			abort_calculation();
 		}
 		return TRUE;
 	}
@@ -354,23 +354,78 @@ GtkWidget* get_floatingpoint_dialog(void) {
 
 	return GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "floatingpoint_dialog"));
 }
-void convert_floatingpoint(const gchar *initial_expression, bool b_result, GtkWindow *parent) {
+void convert_floatingpoint(const MathStructure *initial_value, GtkWindow *parent) {
+	changing_in_fp_dialog = true;
+	GtkWidget *dialog = get_floatingpoint_dialog();
+	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+	if(initial_value->isNumber()) {
+		PrintOptions po;
+		po.number_fraction_format = FRACTION_DECIMAL;
+		po.interval_display = INTERVAL_DISPLAY_SIGNIFICANT_DIGITS;
+		po.use_unicode_signs = printops.use_unicode_signs;
+		po.exp_display = printops.exp_display;
+		po.lower_case_numbers = printops.lower_case_numbers;
+		po.rounding = printops.rounding;
+		po.base_display = BASE_DISPLAY_NONE;
+		po.abbreviate_names = printops.abbreviate_names;
+		po.digit_grouping = printops.digit_grouping;
+		po.multiplication_sign = printops.multiplication_sign;
+		po.division_sign = printops.division_sign;
+		po.short_multiplication = printops.short_multiplication;
+		po.excessive_parenthesis = printops.excessive_parenthesis;
+		po.can_display_unicode_string_function = &can_display_unicode_string_function;
+		po.can_display_unicode_string_arg = (void*) gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec");
+		po.spell_out_logical_operators = printops.spell_out_logical_operators;
+		po.show_ending_zeroes = false;
+		po.min_exp = 0;
+		gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")), initial_value->number().print(po).c_str());
+		string sbin = to_float(initial_value->number(), get_fp_bits(), get_fp_expbits(), get_fp_sgnpos());
+		update_fp_entries(sbin, 10, &initial_value->number());
+	} else {
+		update_fp_entries("", 0);
+	}
+	changing_in_fp_dialog = false;
+	gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")));
+	gtk_widget_show(dialog);
+	gtk_window_present_with_time(GTK_WINDOW(dialog), GDK_CURRENT_TIME);
+}
+void convert_floatingpoint(const gchar *initial_expression, int base, GtkWindow *parent) {
 	changing_in_fp_dialog = false;
 	GtkWidget *dialog = get_floatingpoint_dialog();
 	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
-	switch(b_result ? displayed_printops.base : evalops.parse_options.base) {
+	if(strlen(initial_expression) == 0) {
+		gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")), "");
+		update_fp_entries("", 10);
+	} else {
+		switch(base) {
+			case BASE_BINARY: {
+				gtk_text_buffer_set_text(GTK_TEXT_BUFFER(gtk_builder_get_object(floatingpoint_builder, "fp_buffer_bin")), initial_expression, -1);
+				break;
+			}
+			case BASE_HEXADECIMAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_hex")), initial_expression);
+				break;
+			}
+			case BASE_DECIMAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")), initial_expression);
+				break;
+			}
+			default: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")), "");
+				update_fp_entries("", 10);
+			}
+		}
+	}
+	switch(evalops.parse_options.base) {
 		case BASE_BINARY: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_bin")), initial_expression);
-			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "fp_entry_bin")));
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "fp_textedit_bin")));
 			break;
 		}
 		case BASE_HEXADECIMAL: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_hex")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "fp_entry_hex")));
 			break;
 		}
 		default: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(floatingpoint_builder, "fp_entry_dec")));
 		}
 	}

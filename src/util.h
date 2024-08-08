@@ -16,90 +16,6 @@
 #include <gtk/gtk.h>
 
 enum {
-	SHORTCUT_TYPE_FUNCTION,
-	SHORTCUT_TYPE_FUNCTION_WITH_DIALOG,
-	SHORTCUT_TYPE_VARIABLE,
-	SHORTCUT_TYPE_UNIT,
-	SHORTCUT_TYPE_TEXT,
-	SHORTCUT_TYPE_DATE,
-	SHORTCUT_TYPE_VECTOR,
-	SHORTCUT_TYPE_MATRIX,
-	SHORTCUT_TYPE_SMART_PARENTHESES,
-	SHORTCUT_TYPE_CONVERT,
-	SHORTCUT_TYPE_CONVERT_ENTRY,
-	SHORTCUT_TYPE_OPTIMAL_UNIT,
-	SHORTCUT_TYPE_BASE_UNITS,
-	SHORTCUT_TYPE_OPTIMAL_PREFIX,
-	SHORTCUT_TYPE_TO_NUMBER_BASE,
-	SHORTCUT_TYPE_FACTORIZE,
-	SHORTCUT_TYPE_EXPAND,
-	SHORTCUT_TYPE_PARTIAL_FRACTIONS,
-	SHORTCUT_TYPE_SET_UNKNOWNS,
-	SHORTCUT_TYPE_RPN_UP,
-	SHORTCUT_TYPE_RPN_DOWN,
-	SHORTCUT_TYPE_RPN_SWAP,
-	SHORTCUT_TYPE_RPN_COPY,
-	SHORTCUT_TYPE_RPN_LASTX,
-	SHORTCUT_TYPE_RPN_DELETE,
-	SHORTCUT_TYPE_RPN_CLEAR,
-	SHORTCUT_TYPE_META_MODE,
-	SHORTCUT_TYPE_OUTPUT_BASE,
-	SHORTCUT_TYPE_INPUT_BASE,
-	SHORTCUT_TYPE_EXACT_MODE,
-	SHORTCUT_TYPE_DEGREES,
-	SHORTCUT_TYPE_RADIANS,
-	SHORTCUT_TYPE_GRADIANS,
-	SHORTCUT_TYPE_FRACTIONS,
-	SHORTCUT_TYPE_MIXED_FRACTIONS,
-	SHORTCUT_TYPE_SCIENTIFIC_NOTATION,
-	SHORTCUT_TYPE_SIMPLE_NOTATION,
-	SHORTCUT_TYPE_RPN_MODE,
-	SHORTCUT_TYPE_AUTOCALC,
-	SHORTCUT_TYPE_PROGRAMMING,
-	SHORTCUT_TYPE_KEYPAD,
-	SHORTCUT_TYPE_HISTORY,
-	SHORTCUT_TYPE_HISTORY_SEARCH,
-	SHORTCUT_TYPE_CONVERSION,
-	SHORTCUT_TYPE_STACK,
-	SHORTCUT_TYPE_MINIMAL,
-	SHORTCUT_TYPE_MANAGE_VARIABLES,
-	SHORTCUT_TYPE_MANAGE_FUNCTIONS,
-	SHORTCUT_TYPE_MANAGE_UNITS,
-	SHORTCUT_TYPE_MANAGE_DATA_SETS,
-	SHORTCUT_TYPE_STORE,
-	SHORTCUT_TYPE_MEMORY_CLEAR,
-	SHORTCUT_TYPE_MEMORY_RECALL,
-	SHORTCUT_TYPE_MEMORY_STORE,
-	SHORTCUT_TYPE_MEMORY_ADD,
-	SHORTCUT_TYPE_MEMORY_SUBTRACT,
-	SHORTCUT_TYPE_NEW_VARIABLE,
-	SHORTCUT_TYPE_NEW_FUNCTION,
-	SHORTCUT_TYPE_PLOT,
-	SHORTCUT_TYPE_NUMBER_BASES,
-	SHORTCUT_TYPE_FLOATING_POINT,
-	SHORTCUT_TYPE_CALENDARS,
-	SHORTCUT_TYPE_PERCENTAGE_TOOL,
-	SHORTCUT_TYPE_PERIODIC_TABLE,
-	SHORTCUT_TYPE_UPDATE_EXRATES,
-	SHORTCUT_TYPE_COPY_RESULT,
-	SHORTCUT_TYPE_SAVE_IMAGE,
-	SHORTCUT_TYPE_HELP,
-	SHORTCUT_TYPE_QUIT,
-	SHORTCUT_TYPE_CHAIN_MODE,
-	SHORTCUT_TYPE_ALWAYS_ON_TOP,
-	SHORTCUT_TYPE_DO_COMPLETION,
-	SHORTCUT_TYPE_ACTIVATE_FIRST_COMPLETION,
-	SHORTCUT_TYPE_INSERT_RESULT,
-	SHORTCUT_TYPE_HISTORY_CLEAR,
-	SHORTCUT_TYPE_PRECISION,
-	SHORTCUT_TYPE_MIN_DECIMALS,
-	SHORTCUT_TYPE_MAX_DECIMALS,
-	SHORTCUT_TYPE_MINMAX_DECIMALS
-};
-
-#define LAST_SHORTCUT_TYPE SHORTCUT_TYPE_MINMAX_DECIMALS
-
-enum {
 	DELIMITER_COMMA,
 	DELIMITER_TABULATOR,
 	DELIMITER_SEMICOLON,
@@ -121,8 +37,6 @@ enum {
 };
 
 bool string_is_less(std::string str1, std::string str2);
-extern KnownVariable *vans[5], *v_memory;
-extern MathFunction *f_answer;
 
 struct tree_struct {
 	std::string item;
@@ -142,43 +56,6 @@ struct tree_struct {
 	}
 };
 
-struct mode_struct {
-	PrintOptions po;
-	EvaluationOptions eo;
-	AssumptionType at;
-	AssumptionSign as;
-	Number custom_output_base;
-	Number custom_input_base;
-	int precision;
-	std::string name;
-	bool rpn_mode;
-	bool interval;
-	bool adaptive_interval_display;
-	bool variable_units_enabled;
-	int keypad;
-	bool autocalc;
-	bool chain_mode;
-	bool complex_angle_form;
-	bool implicit_question_asked;
-	int simplified_percentage;
-	bool concise_uncertainty_input;
-	long int fixed_denominator;
-	std::string custom_angle_unit;
-};
-
-struct keyboard_shortcut {
-	guint key;
-	guint modifier;
-	std::vector<int> type;
-	std::vector<std::string> value;
-};
-
-struct custom_button {
-	int type[3];
-	std::string value[3], text;
-	custom_button() {type[0] = -1; type[1] = -1; type[2] = -1;}
-};
-
 #define EXPAND_TO_ITER(model, view, iter)		GtkTreePath *path = gtk_tree_model_get_path(model, &iter); \
 							gtk_tree_view_expand_to_path(GTK_TREE_VIEW(view), path); \
 							gtk_tree_path_free(path);
@@ -189,12 +66,11 @@ struct custom_button {
 							gtk_tree_view_expand_row(GTK_TREE_VIEW(view), path, FALSE); \
 							gtk_tree_path_free(path);
 
-extern GtkWidget *mainwindow;
-extern GtkWidget *expressiontext;
-extern GtkTextBuffer *expressionbuffer;
+#define VERSION_BEFORE(i1, i2, i3) (version_numbers[0] < i1 || (version_numbers[0] == i1 && (version_numbers[1] < i2 || (version_numbers[1] == i2 && version_numbers[2] < i3))))
+#define VERSION_AFTER(i1, i2, i3) (version_numbers[0] > i1 || (version_numbers[0] == i1 && (version_numbers[1] > i2 || (version_numbers[1] == i2 && version_numbers[2] > i3))))
 
 #if GTK_MAJOR_VERSION > 3 || GTK_MINOR_VERSION >= 18
-#	define CLEAN_MODIFIERS(x) (x & gdk_keymap_get_modifier_mask(gdk_keymap_get_for_display(gtk_widget_get_display(mainwindow)), GDK_MODIFIER_INTENT_DEFAULT_MOD_MASK))
+#	define CLEAN_MODIFIERS(x) (x & gdk_keymap_get_modifier_mask(gdk_keymap_get_for_display(gtk_widget_get_display(GTK_WIDGET(main_window()))), GDK_MODIFIER_INTENT_DEFAULT_MOD_MASK))
 #else
 #	define CLEAN_MODIFIERS(x) (x & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_SUPER_MASK | GDK_HYPER_MASK | GDK_META_MASK))
 #endif
@@ -221,9 +97,11 @@ extern GtkTextBuffer *expressionbuffer;
 	} \
 	g_list_free(list);
 
-#define FIX_SUPSUB_PRE(w_supsub) \
+#define FIX_SUPSUB_PRE_W(w_supsub) FIX_SUPSUB_PRE(w_supsub, test_supsub(w_supsub))
+
+#define FIX_SUPSUB_PRE(w_supsub, b) \
 	string s_sup, s_sub;\
-	if(use_supsub(w_supsub)) {\
+	if(b) {\
 		if(pango_version() >= 15000) {\
 			s_sup = "<span size=\"60%\" baseline_shift=\"superscript\">";\
 			s_sub = "<span size=\"60%\" baseline_shift=\"subscript\">";\
@@ -235,51 +113,6 @@ extern GtkTextBuffer *expressionbuffer;
 		}\
 	}
 
-#define FIX_SUB_RESULT(str) \
-	if(fix_supsub_result) {\
-		int s = scaledown;\
-		if(ips.power_depth > 0) s++;\
-		if(pango_version() >= 15000) {\
-			if(s <= 0) gsub("<sub>", "<span size=\"80%\" baseline_shift=\"subscript\">", str);\
-			else if(s == 1) gsub("<sub>", "<span size=\"60%\" baseline_shift=\"subscript\">", str);\
-			else gsub("<sub>", "<span size=\"50%\" baseline_shift=\"subscript\">", str);\
-		} else {\
-			PangoFontDescription *font_supsub;\
-			gtk_style_context_get(gtk_widget_get_style_context(resultview), GTK_STATE_FLAG_NORMAL, GTK_STYLE_PROPERTY_FONT, &font_supsub, NULL);\
-			string s_sub;\
-			if(s <= 0) s_sub = "<span size=\"small\" rise=\"-";\
-			else if(s == 1) s_sub = "<span size=\"x-small\" rise=\"-";\
-			else s_sub = "<span size=\"xx-small\" rise=\"-";\
-			s_sub += i2s(pango_font_description_get_size(font_supsub) * 0.2); s_sub += "\">";\
-			if(ips.power_depth > 0) s++;\
-			gsub("<sub>", s_sub, str);\
-			gsub("</sub>", "</span>", str);\
-		}\
-		gsub("</sub>", "</span>", str);\
-	}
-
-#define FIX_SUP_RESULT(str) \
-	if(fix_supsub_result) {\
-		int s = scaledown;\
-		if(ips.power_depth > 0) s++;\
-		if(pango_version() >= 15000) {\
-			if(s <= 0) gsub("<sup>", "<span size=\"80%\" baseline_shift=\"superscript\">", str);\
-			else if(s == 1) gsub("<sup>", "<span size=\"60%\" baseline_shift=\"superscript\">", str);\
-			else gsub("<sup>", "<span size=\"50%\" baseline_shift=\"superscript\">", str);\
-		} else {\
-			PangoFontDescription *font_supsub;\
-			gtk_style_context_get(gtk_widget_get_style_context(resultview), GTK_STATE_FLAG_NORMAL, GTK_STYLE_PROPERTY_FONT, &font_supsub, NULL);\
-			string s_sup;\
-			if(s <= 0) s_sup = "<span size=\"small\" rise=\"";\
-			else if(s == 1) s_sup = "<span size=\"x-small\" rise=\"";\
-			else s_sup = "<span size=\"xx-small\" rise=\"";\
-			s_sup += i2s(pango_font_description_get_size(font_supsub) * 0.5); s_sup += "\">";\
-			if(ips.power_depth > 0) s++;\
-			gsub("<sup>", s_sup, str);\
-		}\
-		gsub("</sup>", "</span>", str);\
-	}
-
 #define FIX_SUPSUB(str) \
 	if(!s_sup.empty()) {\
 		gsub("<sup>", s_sup, str);\
@@ -288,8 +121,11 @@ extern GtkTextBuffer *expressionbuffer;
 		gsub("</sub>", "</span>", str);\
 	}
 
-bool use_supsub(GtkWidget *w);
-extern bool fix_supsub_status, fix_supsub_result, fix_supsub_history, fix_supsub_completion;
+#define RUNTIME_CHECK_GTK_VERSION(x, y) (gtk_get_minor_version() >= y)
+#define RUNTIME_CHECK_GTK_VERSION_LESS(x, y) (gtk_get_minor_version() < y)
+
+#define EQUALS_IGNORECASE_AND_LOCAL(x,y,z)	(equalsIgnoreCase(x, y) || equalsIgnoreCase(x, z))
+#define EQUALS_IGNORECASE_AND_LOCAL_NR(x,y,z,a)	(equalsIgnoreCase(x, y a) || (x.length() == strlen(z) + strlen(a) && equalsIgnoreCase(x.substr(0, x.length() - strlen(a)), z) && equalsIgnoreCase(x.substr(x.length() - strlen(a)), a)))
 
 extern tree_struct function_cats, unit_cats, variable_cats;
 extern std::string volume_cat;
@@ -299,42 +135,25 @@ extern std::vector<Unit*> user_units;
 extern std::vector<Variable*> user_variables;
 extern std::vector<MathFunction*> user_functions;
 
-extern bool b_busy, b_busy_command, b_busy_result, b_busy_expression, b_busy_fetch;
-extern GtkWidget *expressiontext;
-
-void block_completion();
-void unblock_completion();
-void block_calculation();
-void unblock_calculation();
-void block_error();
-void unblock_error();
-bool calculation_blocked();
-void block_result();
-void unblock_result();
-bool result_blocked();
-
 GtkBuilder *getBuilder(const char *filename);
+
+std::string unformat(std::string str);
+
+void get_image_blank_width(cairo_surface_t *surface, int *x1, int *x2);
+void get_image_blank_height(cairo_surface_t *surface, int *y1, int *y2);
+
 void set_tooltips_enabled(GtkWidget *w, bool b);
+void update_tooltips_enabled();
+
+gchar *font_name_to_css(const char *font_name, const char *w = "*");
+
+std::string unhtmlize(std::string str, bool b_ascii = false);
 
 bool last_is_operator(std::string str, bool allow_exp = false);
 
 const char *sub_sign();
 const char *times_sign(bool unit_expression = false);
 const char *divide_sign();
-const char *expression_add_sign();
-const char *expression_sub_sign();
-const char *expression_times_sign();
-const char *expression_divide_sign();
-
-std::string get_expression_text();
-bool expression_is_empty();
-void clear_expression_text();
-bool expression_history_up();
-bool expression_history_down();
-bool is_at_beginning_of_expression(bool allow_selection = false);
-int wrap_expression_selection(const char *insert_before = NULL, bool return_true_if_whole_selected = false);
-void focus_keeping_selection();
-bool expression_changed();
 bool result_is_autocalculated();
 
 std::string print_with_evalops(const Number &nr);
@@ -357,102 +176,42 @@ bool entry_in_quotes(GtkEntry *w);
 const gchar *key_press_get_symbol(GdkEventKey *event, bool do_caret_as_xor = true, bool unit_expression = false);
 
 void on_variable_edit_entry_name_changed(GtkEditable *editable, gpointer user_data);
-#ifdef __cplusplus
-extern "C" {
-#endif
-void brace_wrap();
+
+enum {
+	PREFIX_MODE_NO_PREFIXES,
+	PREFIX_MODE_SELECTED_UNITS,
+	PREFIX_MODE_CURRENCIES,
+	PREFIX_MODE_ALL_UNITS
+};
+
 bool do_shortcut(int type, std::string value);
 gboolean on_math_entry_key_press_event(GtkWidget *o, GdkEventKey *event, gpointer);
 gboolean on_unit_entry_key_press_event(GtkWidget *o, GdkEventKey *event, gpointer);
 void entry_insert_text(GtkWidget *w, const gchar *text);
-void set_input_base(int base);
-void set_output_base(int base);
 bool textview_in_quotes(GtkTextView *w);
 bool contains_polynomial_division(MathStructure &m);
 bool contains_imaginary_number(MathStructure &m);
 bool contains_rational_number(MathStructure &m);
 bool contains_fraction(MathStructure &m, bool in_div = false);
+bool contains_plot_or_save(const std::string &str);
 bool contains_convertible_unit(MathStructure &m);
+bool contains_prefix(const MathStructure &m);
 
-void memory_recall();
-void memory_store();
-void memory_add();
-void memory_subtract();
-void memory_clear();
+bool test_supsub(GtkWidget *w);
 
-void insert_angle_symbol();
-
-void output_base_updated_from_menu();
-void input_base_updated_from_menu();
-void update_menu_base();
-#ifdef __cplusplus
-}
-#endif
-bool use_keypad_buttons_for_history();
-bool keypad_is_visible();
-
-void on_abort_display(GtkDialog*, gint, gpointer);
-void on_abort_command(GtkDialog*, gint, gpointer);
-void on_abort_calculation(GtkDialog*, gint, gpointer);
-
-void show_message(const gchar *text, GtkWidget *win);
-bool ask_question(const gchar *text, GtkWidget *win);
-void show_notification(std::string text);
-void show_help(const char *file, GtkWidget *win);
-
-void set_clipboard(std::string str, int ascii, bool html, bool is_result, int copy_without_units = -1);
-
-void result_display_updated();
-void result_format_updated();
-void result_action_executed();
-void result_prefix_changed(Prefix *prefix = NULL);
-void expression_calculation_updated();
-void expression_format_updated(bool recalculate = false);
-void execute_expression(bool force = true, bool do_mathoperation = false, MathOperation op = OPERATION_ADD, MathFunction *f = NULL, bool do_stack = false, size_t stack_index = 0, std::string execute_str = std::string(), std::string str = std::string(), bool check_exrates = true);
-void executeCommand(int command_type, bool show_result = true, bool force = false, std::string ceu_str = "", Unit *u = NULL, int run = 1);
-void calculateRPN(int op);
-void calculateRPN(MathFunction *f);
-bool do_chain_mode(const gchar *op);
-void setResult(Prefix *prefix = NULL, bool update_history = true, bool update_parse = false, bool force = false, std::string transformation = "", size_t stack_index = 0, bool register_moved = false, bool supress_dialog = false);
-void clearresult();
-void convert_result_to_unit_expression(std::string str);
-bool display_errors(int *history_index_p = NULL, GtkWidget *win = NULL, int *inhistory_index = NULL, int type = 0, bool *implicit_warning = NULL, time_t history_time = 0);
-void add_as_variable();
-
-MathStructure *current_result();
-void replace_current_result(MathStructure*);
-MathStructure *current_displayed_result();
-
-void update_vmenu(bool update_compl = true);
-void update_fmenu(bool update_compl = true);
-void update_umenus(bool update_compl = true);
-bool is_answer_variable(Variable *v);
-
-void variable_removed(Variable *v);
-void unit_removed(Unit *u);
-void function_removed(MathFunction *f);
-
-void variable_edited(Variable *v);
-void function_edited(MathFunction *f);
-void unit_edited(Unit *u);
-void dataset_edited(DataSet *ds);
+void show_message(const gchar *text, GtkWindow *win = NULL);
+bool ask_question(const gchar *text, GtkWindow *win = NULL);
 
 bool equalsIgnoreCase(const std::string &str1, const std::string &str2, size_t i2, size_t i2_end, size_t minlength);
 bool title_matches(ExpressionItem *item, const std::string &str, size_t minlength = 0);
 bool name_matches(ExpressionItem *item, const std::string &str);
 bool country_matches(Unit *u, const std::string &str, size_t minlength = 0);
 
-void insert_text(const gchar *text);
-void overwrite_expression_selection(const gchar *text);
-void apply_function(MathFunction *f);
-void insert_function(MathFunction *f, GtkWidget *parent = NULL, bool add_to_menu = true);
-void insert_variable(Variable *v, bool add_to_menu = true);
-void insert_unit(Unit *u, bool add_to_recent = false);
-void insert_button_function(MathFunction *f, bool save_to_recent = false, bool apply_to_stack = true);
 
-bool check_exchange_rates(GtkWidget *win = NULL, bool set_result = false);
+void find_matching_units(const MathStructure &m, const MathStructure *mparse, std::vector<Unit*> &v, bool top = true);
+Unit *find_exact_matching_unit(const MathStructure &m);
 
-void convert_result_to_unit(Unit *u);
+long int get_fixed_denominator_gtk(const std::string &str, int &to_fraction, bool qalc_command = false);
 
 void fix_deactivate_label_width(GtkWidget *w);
 
@@ -464,10 +223,11 @@ std::string button_valuetype_text(int type, const std::string &value);
 std::string shortcut_types_text(const std::vector<int> &type);
 const char *shortcut_copy_value_text(int v);
 std::string shortcut_values_text(const std::vector<std::string> &value, const std::vector<int> &type);
-void update_accels(int type = -1);
-void update_custom_buttons(int index = -1);
 
 void update_window_properties(GtkWidget *w, bool ignore_tooltips_setting = false);
+
+void combo_set_bits(GtkComboBox *w, unsigned int bits, bool has_auto = true);
+unsigned int combo_get_bits(GtkComboBox *w, bool has_auto = true);
 
 #define MENU_ITEM_WITH_INT(x,y,z)		item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect(G_OBJECT (item), "activate", G_CALLBACK(y), GINT_TO_POINTER(z)); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);
 #define MENU_ITEM_WITH_STRING(x,y,z)		item = gtk_menu_item_new_with_label(x); gtk_widget_show (item); g_signal_connect(G_OBJECT (item), "activate", G_CALLBACK(y), (gpointer) z); gtk_menu_shell_append(GTK_MENU_SHELL(sub), item);

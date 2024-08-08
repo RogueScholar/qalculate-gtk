@@ -27,6 +27,8 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
+#include "openhelp.h"
 #include "nameseditdialog.h"
 #include "matrixeditdialog.h"
 #include "unknowneditdialog.h"
@@ -43,13 +45,13 @@ KnownVariable *edited_variable = NULL;
 
 bool variable_value_changed = false;
 
-void on_variables_edit_textview_value_changed(GtkTextBuffer*, gpointer user_data) {
+void on_variables_edit_textview_value_changed(GtkTextBuffer*, gpointer) {
 	variable_value_changed = true;
 }
-void on_variable_edit_checkbutton_temporary_toggled(GtkToggleButton *w, gpointer user_data) {
+void on_variable_edit_checkbutton_temporary_toggled(GtkToggleButton *w, gpointer) {
 	gtk_entry_set_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(gtk_builder_get_object(variableedit_builder, "variable_edit_combo_category")))), gtk_toggle_button_get_active(w) ? CALCULATOR->temporaryCategory().c_str() : "");
 }
-void on_variable_edit_combo_category_changed(GtkComboBox *w, gpointer user_data) {
+void on_variable_edit_combo_category_changed(GtkComboBox *w, gpointer) {
 	g_signal_handlers_block_matched((gpointer) gtk_builder_get_object(variableedit_builder, "variable_edit_checkbutton_temporary"), G_SIGNAL_MATCH_FUNC, 0, 0, NULL, (gpointer) on_variable_edit_checkbutton_temporary_toggled, NULL);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gtk_builder_get_object(variableedit_builder, "variable_edit_checkbutton_temporary")), CALCULATOR->temporaryCategory() == gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(w)));
 	g_signal_handlers_unblock_matched((gpointer) gtk_builder_get_object(variableedit_builder, "variable_edit_checkbutton_temporary"), G_SIGNAL_MATCH_FUNC, 0, 0, NULL, (gpointer) on_variable_edit_checkbutton_temporary_toggled, NULL);
@@ -71,7 +73,7 @@ void on_variable_edit_button_names_clicked(GtkWidget*, gpointer) {
 	}
 	on_variable_changed();
 }
-gboolean on_variable_edit_textview_value_key_press_event(GtkWidget *w, GdkEventKey *event, gpointer renderer) {
+gboolean on_variable_edit_textview_value_key_press_event(GtkWidget *w, GdkEventKey *event, gpointer) {
 	if(textview_in_quotes(GTK_TEXT_VIEW(w))) return FALSE;
 	const gchar *key = key_press_get_symbol(event);
 	if(!key) return FALSE;
@@ -261,20 +263,20 @@ run_variable_edit_dialog:
 			//no name -- open dialog again
 			gtk_notebook_set_current_page(GTK_NOTEBOOK(gtk_builder_get_object(variableedit_builder, "variable_edit_tabs")), 0);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(variableedit_builder, "variable_edit_entry_name")));
-			show_message(_("Empty name field."), dialog);
+			show_message(_("Empty name field."), GTK_WINDOW(dialog));
 			goto run_variable_edit_dialog;
 		}
 		if(str2.empty()) {
 			//no value -- open dialog again
 			gtk_notebook_set_current_page(GTK_NOTEBOOK(gtk_builder_get_object(variableedit_builder, "variable_edit_tabs")), 0);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(variableedit_builder, "variable_edit_textview_value")));
-			show_message(_("Empty value field."), dialog);
+			show_message(_("Empty value field."), GTK_WINDOW(dialog));
 			goto run_variable_edit_dialog;
 		}
 		//variable with the same name exists -- overwrite or open dialog again
 		if((!v || !v->hasName(str)) && ((names_status() != 1 && !str.empty()) || !has_name()) && CALCULATOR->variableNameTaken(str, v)) {
 			Variable *var = CALCULATOR->getActiveVariable(str, true);
-			if((!v || v != var) && (!var || var->category() != CALCULATOR->temporaryCategory()) && !ask_question(_("A unit or variable with the same name already exists.\nDo you want to overwrite it?"), dialog)) {
+			if((!v || v != var) && (!var || var->category() != CALCULATOR->temporaryCategory()) && !ask_question(_("A unit or variable with the same name already exists.\nDo you want to overwrite it?"), GTK_WINDOW(dialog))) {
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(gtk_builder_get_object(variableedit_builder, "variable_edit_tabs")), 0);
 				gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(variableedit_builder, "variable_edit_entry_name")));
 				goto run_variable_edit_dialog;
@@ -324,7 +326,7 @@ run_variable_edit_dialog:
 			variable_edited(v);
 		}
 	} else if(response == GTK_RESPONSE_HELP) {
-		show_help("qalculate-variables.html#qalculate-variable-creation", GTK_WIDGET(gtk_builder_get_object(variableedit_builder, "variable_edit_dialog")));
+		show_help("qalculate-variables.html#qalculate-variable-creation", GTK_WINDOW(gtk_builder_get_object(variableedit_builder, "variable_edit_dialog")));
 		goto run_variable_edit_dialog;
 	}
 	edited_variable = NULL;

@@ -28,10 +28,11 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
+#include "exchangerates.h"
+#include "expressionedit.h"
 #include "uniteditdialog.h"
 #include "unitsdialog.h"
-
-#include "unordered_map_define.h"
 
 using std::string;
 using std::cout;
@@ -57,8 +58,6 @@ GtkTreeViewColumn *units_flag_column;
 GtkWidget *units_convert_view, *units_convert_window, *units_convert_scrolled;
 GtkCellRenderer *units_convert_flag_renderer;
 
-extern unordered_map<string, cairo_surface_t*> flag_surfaces;
-
 bool block_unit_convert = false;
 string old_fromValue, old_toValue;
 string selected_unit_category;
@@ -72,6 +71,29 @@ void on_units_convert_view_row_activated(GtkTreeView*, GtkTreePath *path, GtkTre
 void on_units_entry_search_changed(GtkEntry *w, gpointer);
 void on_units_convert_search_changed(GtkEntry *w, gpointer);
 void convert_in_wUnits(int toFrom = -1);
+
+bool read_units_dialog_settings_line(string &svar, string&, int &v) {
+	if(svar == "units_width") {
+		units_width = v;
+	} else if(svar == "units_height") {
+		units_height = v;
+	} else if(svar == "units_panel_position") {
+		units_hposition = v;
+	} else if(svar == "units_hpanel_position") {
+		units_hposition = v;
+	} else if(svar == "units_vpanel_position") {
+		units_vposition = v;
+	} else {
+		return false;
+	}
+	return true;
+}
+void write_units_dialog_settings(FILE *file) {
+	if(units_width > -1) fprintf(file, "units_width=%i\n", units_width);
+	if(units_height > -1) fprintf(file, "units_height=%i\n", units_height);
+	if(units_hposition > -1) fprintf(file, "units_hpanel_position=%i\n", units_hposition);
+	if(units_vposition > -1) fprintf(file, "units_vpanel_position=%i\n", units_vposition);
+}
 
 Unit *get_selected_unit() {
 	return selected_unit;
@@ -410,7 +432,7 @@ void convert_in_wUnits(int toFrom) {
 				CALCULATOR->resetExchangeRatesUsed();
 				block_error();
 				MathStructure v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(toValue, eo.parse_options), uTo, uFrom, 1500, eo);
-				if(!v_mstruct.isAborted() && check_exchange_rates(GTK_WIDGET(gtk_builder_get_object(units_builder, "units_dialog")))) v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(toValue, eo.parse_options), uTo, uFrom, 1500, eo);
+				if(!v_mstruct.isAborted() && check_exchange_rates(GTK_WINDOW(gtk_builder_get_object(units_builder, "units_dialog")))) v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(toValue, eo.parse_options), uTo, uFrom, 1500, eo);
 				if(v_mstruct.isAborted()) {
 					old_fromValue = CALCULATOR->timedOutString();
 				} else {
@@ -418,7 +440,7 @@ void convert_in_wUnits(int toFrom) {
 				}
 				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(units_builder, "units_entry_from_val")), old_fromValue.c_str());
 				b = b || v_mstruct.isApproximate();
-				display_errors(NULL, GTK_WIDGET(gtk_builder_get_object(units_builder, "units_dialog")));
+				display_errors(GTK_WINDOW(gtk_builder_get_object(units_builder, "units_dialog")));
 				unblock_error();
 			}
 		} else {
@@ -440,7 +462,7 @@ void convert_in_wUnits(int toFrom) {
 				CALCULATOR->resetExchangeRatesUsed();
 				block_error();
 				MathStructure v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(fromValue, eo.parse_options), uFrom, uTo, 1500, eo);
-				if(!v_mstruct.isAborted() && check_exchange_rates(GTK_WIDGET(gtk_builder_get_object(units_builder, "units_dialog")))) v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(fromValue, eo.parse_options), uFrom, uTo, 1500, eo);
+				if(!v_mstruct.isAborted() && check_exchange_rates(GTK_WINDOW(gtk_builder_get_object(units_builder, "units_dialog")))) v_mstruct = CALCULATOR->convert(CALCULATOR->unlocalizeExpression(fromValue, eo.parse_options), uFrom, uTo, 1500, eo);
 				if(v_mstruct.isAborted()) {
 					old_toValue = CALCULATOR->timedOutString();
 				} else {
@@ -448,7 +470,7 @@ void convert_in_wUnits(int toFrom) {
 				}
 				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(units_builder, "units_entry_to_val")), old_toValue.c_str());
 				b = b || v_mstruct.isApproximate();
-				display_errors(NULL, GTK_WIDGET(gtk_builder_get_object(units_builder, "units_dialog")));
+				display_errors(GTK_WINDOW(gtk_builder_get_object(units_builder, "units_dialog")));
 				unblock_error();
 			}
 		}
@@ -503,7 +525,7 @@ void on_units_entry_to_val_activate(GtkEntry*, gpointer) {
 	convert_in_wUnits(1);
 }
 
-gboolean on_units_dialog_button_press_event(GtkWidget*, GdkEventButton *event, gpointer) {
+gboolean on_units_dialog_button_press_event(GtkWidget*, GdkEventButton*, gpointer) {
 	gtk_widget_hide(units_convert_window);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gtk_builder_get_object(units_builder, "units_convert_to_button")), FALSE);
 	return FALSE;
@@ -536,12 +558,12 @@ gboolean on_units_convert_view_motion_notify_event(GtkWidget*, GdkEventMotion*, 
 	}
 	return FALSE;
 }
-gboolean on_units_convert_window_key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer) {
+gboolean on_units_convert_window_key_press_event(GtkWidget*, GdkEventKey *event, gpointer) {
 	if(!gtk_widget_get_mapped(units_convert_window)) return FALSE;
 	gtk_widget_event(GTK_WIDGET(gtk_builder_get_object(units_builder, "units_convert_to_button")), (GdkEvent*) event);
 	return TRUE;
 }
-gboolean on_units_convert_window_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer) {
+gboolean on_units_convert_window_button_press_event(GtkWidget*, GdkEventButton*, gpointer) {
 	if(!gtk_widget_get_mapped(units_convert_window)) return FALSE;
 	gtk_widget_hide(units_convert_window);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gtk_builder_get_object(units_builder, "units_convert_to_button")), FALSE);
@@ -699,17 +721,17 @@ void on_units_button_insert_clicked(GtkButton*, gpointer) {
 		if(u->subtype() == SUBTYPE_COMPOSITE_UNIT) {
 			PrintOptions po = printops;
 			po.is_approximate = NULL;
-			po.can_display_unicode_string_arg = (void*) expressiontext;
+			po.can_display_unicode_string_arg = (void*) expression_edit_widget();
 			string str = ((CompositeUnit*) u)->print(po, false, TAG_TYPE_HTML, true);
 			insert_text(str.c_str());
 		} else {
-			insert_text(u->preferredInputName(printops.abbreviate_names, printops.use_unicode_signs, true, false, &can_display_unicode_string_function, (void*) expressiontext).formattedName(TYPE_UNIT, true).c_str());
+			insert_text(u->preferredInputName(printops.abbreviate_names, printops.use_unicode_signs, true, false, &can_display_unicode_string_function, (void*) expression_edit_widget()).formattedName(TYPE_UNIT, true).c_str());
 		}
 	}
 }
 
 void on_units_button_convert_to_clicked(GtkButton*, gpointer) {
-	if(b_busy) return;
+	if(calculator_busy()) return;
 	Unit *u = get_selected_unit();
 	if(u) convert_result_to_unit(u);
 }
@@ -729,7 +751,7 @@ void on_units_button_delete_clicked(GtkButton*, gpointer) {
 	if(!u || !u->isLocal()) return;
 	if(u->isUsedByOtherUnits()) {
 		//do not delete units that are used by other units
-		show_message(_("Cannot delete unit as it is needed by other units."), GTK_WIDGET(gtk_builder_get_object(units_builder, "units_dialog")));
+		show_message(_("Cannot delete unit as it is needed by other units."), GTK_WINDOW(gtk_builder_get_object(units_builder, "units_dialog")));
 		return;
 	}
 	u->destroy();

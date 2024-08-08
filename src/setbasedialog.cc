@@ -27,6 +27,7 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
 #include "setbasedialog.h"
 
 using std::string;
@@ -36,7 +37,7 @@ using std::endl;
 
 GtkBuilder *setbase_builder = NULL;
 
-extern string prev_output_base, prev_input_base;
+string prev_output_base, prev_input_base;
 
 void on_set_base_entry_output_other_activate(GtkEntry *w, gpointer user_data);
 void on_set_base_entry_input_other_activate(GtkEntry *w, gpointer user_data);
@@ -74,7 +75,7 @@ void on_set_base_entry_output_other_activate(GtkEntry *w, gpointer) {
 	CALCULATOR->calculate(&m, CALCULATOR->unlocalizeExpression(str, eo.parse_options), 500, eo);
 	if(CALCULATOR->endTemporaryStopMessages() || !m.isNumber() || !m.number().isReal() || (m.number().isNegative() && !m.number().isInteger()) || !(m.number() > 1 || m.number() < -1)) {
 		prev_output_base = str;
-		show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
+		show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
 		return;
 	}
 	if(m.isInteger() && m.number() >= 2 && m.number() <= 36) {
@@ -150,7 +151,7 @@ void on_set_base_radiobutton_output_other_toggled(GtkToggleButton *w, gpointer) 
 	CALCULATOR->calculate(&m, CALCULATOR->unlocalizeExpression(str, eo.parse_options), 500, eo);
 	if(CALCULATOR->endTemporaryStopMessages() || !m.isNumber() || !m.number().isReal() || (m.number().isNegative() && !m.number().isInteger()) || !(m.number() > 1 || m.number() < -1)) {
 		prev_output_base = str;
-		show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
+		show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
 		return;
 	}
 	if(m.isInteger() && m.number() >= 2 && m.number() <= 36) {
@@ -206,7 +207,7 @@ void on_set_base_radiobutton_input_other_toggled(GtkToggleButton *w, gpointer) {
 		CALCULATOR->calculate(&m, CALCULATOR->unlocalizeExpression(str, eo.parse_options), 500, eo);
 		if(CALCULATOR->endTemporaryStopMessages() || !m.isNumber()) {
 			prev_input_base = str;
-			show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
+			show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
 			return;
 		}
 		if(m.isInteger() && m.number() >= 2 && m.number() <= 36) {
@@ -252,7 +253,7 @@ void on_set_base_entry_input_other_activate(GtkEntry *w, gpointer) {
 		CALCULATOR->calculate(&m, CALCULATOR->unlocalizeExpression(str, eo.parse_options), 500, eo);
 		if(CALCULATOR->endTemporaryStopMessages() || !m.isNumber()) {
 			prev_input_base = str;
-			show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
+			show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(setbase_builder, "set_base_dialog")));
 			return;
 		}
 		if(m.isInteger() && m.number() >= 2 && m.number() <= 36) {
@@ -483,7 +484,7 @@ GtkWidget* get_set_base_dialog(void) {
 	return GTK_WIDGET(gtk_builder_get_object(setbase_builder, "set_base_dialog"));
 }
 
-void bases_updated() {
+void update_setbase() {
 	if(setbase_builder) {
 		g_signal_handlers_block_matched((gpointer) gtk_builder_get_object(setbase_builder, "set_base_combo_output_other"), G_SIGNAL_MATCH_FUNC, 0, 0, NULL, (gpointer) on_set_base_combo_output_other_changed, NULL);
 		switch(printops.base) {

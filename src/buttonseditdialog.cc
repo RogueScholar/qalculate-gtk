@@ -27,6 +27,8 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "modes.h"
+#include "keypad.h"
 #include "buttonseditdialog.h"
 
 using std::string;
@@ -40,8 +42,7 @@ extern GtkBuilder *main_builder;
 GtkWidget *tButtonsEditType, *tButtonsEdit;
 GtkListStore *tButtonsEditType_store, *tButtonsEdit_store;
 
-extern vector<custom_button> custom_buttons;
-extern vector<mode_struct> modes;
+extern std::vector<custom_button> custom_buttons;
 
 #define SET_BUTTONS_EDIT_ITEM_3(l, t1, t2, t3) \
 	{gtk_list_store_set(tButtonsEdit_store, &iter, 1, custom_buttons[i].text.empty() ? l : custom_buttons[i].text.c_str(), 2, custom_buttons[i].type[0] == -1 ? t1 : button_valuetype_text(custom_buttons[i].type[0], custom_buttons[i].value[0]).c_str(), 3, custom_buttons[i].type[1] == -1 ? t2 : button_valuetype_text(custom_buttons[i].type[1], custom_buttons[i].value[1]).c_str(), 4, custom_buttons[i].type[2] == -1 ? t3 : button_valuetype_text(custom_buttons[i].type[2], custom_buttons[i].value[2]).c_str(), -1);\
@@ -116,11 +117,11 @@ void on_buttonsedit_type_treeview_row_activated(GtkTreeView*, GtkTreePath*, GtkT
 	else gtk_dialog_response(GTK_DIALOG(gtk_builder_get_object(buttonsedit_builder, "shortcuts_type_dialog")), GTK_RESPONSE_ACCEPT);
 }
 
-void on_buttonsedit_entry_value_activate(GtkEntry*, gpointer d) {
+void on_buttonsedit_entry_value_activate(GtkEntry*, gpointer) {
 	gtk_dialog_response(GTK_DIALOG(gtk_builder_get_object(buttonsedit_builder, "shortcuts_type_dialog")), GTK_RESPONSE_ACCEPT);
 }
 
-void on_buttons_edit_entry_label_changed(GtkEditable *w, gpointer user_data) {
+void on_buttons_edit_entry_label_changed(GtkEditable *w, gpointer) {
 	int i = 0;
 	GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tButtonsEdit));
 	GtkTreeModel *model;
@@ -216,7 +217,7 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 			if(type != SHORTCUT_TYPE_TEXT) remove_blank_ends(value);
 			if(value.empty()) {
 				gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-				show_message(_("Empty value."), d);
+				show_message(_("Empty value."), GTK_WINDOW(d));
 				goto run_shortcuts_dialog;
 			}
 			switch(type) {
@@ -226,7 +227,7 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 					if(value.length() > 2 && value.substr(value.length() - 2, 2) == "()") value = value.substr(0, value.length() - 2);
 					if(!CALCULATOR->getActiveFunction(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Function not found."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Function not found."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -234,7 +235,7 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 				case SHORTCUT_TYPE_VARIABLE: {
 					if(!CALCULATOR->getActiveVariable(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Variable not found."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Variable not found."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -242,22 +243,15 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 				case SHORTCUT_TYPE_UNIT: {
 					if(!CALCULATOR->getActiveUnit(value)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Unit not found."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Unit not found."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
 				}
 				case SHORTCUT_TYPE_META_MODE: {
-					bool b = false;
-					for(size_t i = 0; i < modes.size(); i++) {
-						if(equalsIgnoreCase(modes[i].name, value)) {
-							b = true;
-							break;
-						}
-					}
-					if(!b) {
+					if(mode_index(value, false) == (size_t) -1) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Mode not found."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Mode not found."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -269,7 +263,7 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 					base_from_string(value, base, nbase, type == SHORTCUT_TYPE_INPUT_BASE);
 					if(base == BASE_CUSTOM && nbase.isZero()) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported base."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported base."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -281,7 +275,7 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 					int v = s2i(value);
 					if(value.find_first_not_of(SPACE NUMBERS) != string::npos || v < -1 || (type == SHORTCUT_TYPE_PRECISION && v < 2)) {
 						gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_entry_value")));
-						show_message(_("Unsupported value."), GTK_WIDGET(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
+						show_message(_("Unsupported value."), GTK_WINDOW(gtk_builder_get_object(buttonsedit_builder, "shortcuts_dialog")));
 						goto run_shortcuts_dialog;
 					}
 					break;
@@ -297,16 +291,16 @@ void on_buttonsedit_button_x_clicked(int b_i) {
 	}
 	gtk_widget_hide(d);
 }
-void on_buttons_edit_button_1_clicked(GtkButton*, gpointer user_data) {
+void on_buttons_edit_button_1_clicked(GtkButton*, gpointer) {
 	on_buttonsedit_button_x_clicked(0);
 }
-void on_buttons_edit_button_2_clicked(GtkButton*, gpointer user_data) {
+void on_buttons_edit_button_2_clicked(GtkButton*, gpointer) {
 	on_buttonsedit_button_x_clicked(1);
 }
-void on_buttons_edit_button_3_clicked(GtkButton*, gpointer user_data) {
+void on_buttons_edit_button_3_clicked(GtkButton*, gpointer) {
 	on_buttonsedit_button_x_clicked(2);
 }
-void on_buttons_edit_button_defaults_clicked(GtkButton *w, gpointer user_data) {
+void on_buttons_edit_button_defaults_clicked(GtkButton*, gpointer) {
 	int i = 0;
 	GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tButtonsEdit));
 	GtkTreeModel *model;

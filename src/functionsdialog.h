@@ -13,10 +13,14 @@
 #define FUNCTIONS_DIALOG_H
 
 #include <gtk/gtk.h>
+#include <stdio.h>
 
 void update_functions_tree();
 void manage_functions(GtkWindow *parent, const gchar *str = NULL);
 void update_functions_settings();
 void functions_font_updated();
+
+bool read_functions_dialog_settings_line(std::string &svar, std::string &svalue, int &v);
+void write_functions_dialog_settings(FILE *file);
 
 #endif /* FUNCTIONS_DIALOG_H */

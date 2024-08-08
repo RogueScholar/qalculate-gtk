@@ -29,6 +29,7 @@ flags.c : $(top_srcdir)/data/flags.gresource.xml $(top_srcdir)/data/flags/*.png
 	glib-compile-resources --generate-source --target=$@ --sourcedir=$(top_srcdir)/data/flags $(top_srcdir)/data/flags.gresource.xml
 
 qalculate_gtk_SOURCES = \
+	exchangerates.cc exchangerates.h \
 	matrixdialog.cc matrixdialog.h \
 	nameseditdialog.cc nameseditdialog.h \
 	dataseteditdialog.cc dataseteditdialog.h \
@@ -54,13 +55,24 @@ qalculate_gtk_SOURCES = \
 	percentagecalculationdialog.cc percentagecalculationdialog.h \
 	calendarconversiondialog.cc calendarconversiondialog.h \
 	floatingpointdialog.cc floatingpointdialog.h \
+	insertfunctiondialog.cc insertfunctiondialog.h \
+	preferencesdialog.cc preferencesdialog.h \
 	conversionview.cc conversionview.h \
+	historyview.cc historyview.h \
 	stackview.cc stackview.h \
 	keypad.cc keypad.h \
-	main.cc main.h \
-	interface.cc interface.h \
-	callbacks.cc callbacks.h \
-	unordered_map_define.h support.h util.h settings.h
+	expressionedit.cc expressionedit.h \
+	expressionstatus.cc expressionstatus.h \
+	expressioncompletion.cc expressioncompletion.h \
+	drawstructure.cc drawstructure.h \
+	resultview.cc resultview.h \
+	openhelp.cc openhelp.h \
+	menubar.cc menubar.h \
+	main.cc \
+	mainwindow.cc mainwindow.h \
+	modes.cc modes.h \
+	util.cc util.h \
+	unordered_map_define.h support.h settings.h
 
 nodist_qalculate_gtk_SOURCES = ui.c flags.c
 

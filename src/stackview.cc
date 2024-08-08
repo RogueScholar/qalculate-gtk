@@ -27,6 +27,12 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "insertfunctiondialog.h"
+#include "mainwindow.h"
+#include "expressionedit.h"
+#include "resultview.h"
+#include "keypad.h"
+#include "historyview.h"
 #include "stackview.h"
 
 using std::string;
@@ -40,6 +46,7 @@ GtkWidget *stackview;
 GtkListStore *stackstore;
 GtkCellRenderer *register_renderer, *register_index_renderer;
 GtkTreeViewColumn *register_column;
+GtkCssProvider *box_rpnl_provider;
 
 MathStructure lastx;
 
@@ -168,7 +175,7 @@ void on_button_registerswap_clicked(GtkButton*, gpointer) {
 	updateRPNIndexes();
 }
 void on_button_lastx_clicked(GtkButton*, gpointer) {
-	if(expression_changed()) {
+	if(expression_modified()) {
 		if(get_expression_text().find_first_not_of(SPACES) != string::npos) {
 			execute_expression(true);
 		}
@@ -383,9 +390,9 @@ void update_stackview_popup() {
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_copytext")), b_sel);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_copy")), b_sel);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_movetotop")), b_sel && index != 0);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_moveup")), b_sel);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_movedown")), b_sel);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_swap")), b_sel);
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_moveup")), b_sel && CALCULATOR->RPNStackSize() >= 2);
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_movedown")), b_sel && CALCULATOR->RPNStackSize() >= 2);
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_swap")), b_sel && CALCULATOR->RPNStackSize() >= 2);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_edit")), b_sel);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_negate")), b_sel);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(main_builder, "popup_menu_item_stack_invert")), b_sel);
@@ -397,7 +404,7 @@ gboolean on_stackview_button_press_event(GtkWidget*, GdkEventButton *event, gpoi
 	GtkTreePath *path = NULL;
 	GtkTreeSelection *select = NULL;
 	if(gdk_event_triggers_context_menu((GdkEvent*) event) && event->type == GDK_BUTTON_PRESS) {
-		if(b_busy) return TRUE;
+		if(calculator_busy()) return TRUE;
 		if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(stackview), event->x, event->y, &path, NULL, NULL, NULL)) {
 			select = gtk_tree_view_get_selection(GTK_TREE_VIEW(stackview));
 			if(!gtk_tree_selection_path_is_selected(select, path)) {
@@ -417,7 +424,7 @@ gboolean on_stackview_button_press_event(GtkWidget*, GdkEventButton *event, gpoi
 	return FALSE;
 }
 gboolean on_stackview_popup_menu(GtkWidget*, gpointer) {
-	if(b_busy) return TRUE;
+	if(calculator_busy()) return TRUE;
 	update_stackview_popup();
 #if GTK_MAJOR_VERSION > 3 || GTK_MINOR_VERSION >= 22
 	gtk_menu_popup_at_pointer(GTK_MENU(gtk_builder_get_object(main_builder, "popup_menu_stackview")), NULL);
@@ -559,15 +566,24 @@ void RPNRegisterChanged(string text, gint index) {
 	gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(stackstore), &iter, NULL, index);
 	gtk_list_store_set(stackstore, &iter, 1, text.c_str(), -1);
 }
-void stack_view_update_font(bool initial) {
-	if(use_custom_history_font) {
-		g_object_set(G_OBJECT(register_renderer), "font", custom_history_font.c_str(), NULL);
-		g_object_set(G_OBJECT(register_index_renderer), "font", custom_history_font.c_str(), NULL);
+void update_stack_font(bool initial) {
+	if(history_font()) {
+		g_object_set(G_OBJECT(register_renderer), "font", history_font(), NULL);
+		g_object_set(G_OBJECT(register_index_renderer), "font", history_font(), NULL);
 	} else if(!initial) {
 		g_object_set(G_OBJECT(register_renderer), "font", "", NULL);
 		g_object_set(G_OBJECT(register_index_renderer), "font", "", NULL);
 	}
 	if(!initial) updateRPNIndexes();
+}
+void update_stack_button_font() {
+	if(keypad_font()) {
+		gchar *gstr = font_name_to_css(keypad_font());
+		gtk_css_provider_load_from_data(box_rpnl_provider, gstr, -1, NULL);
+		g_free(gstr);
+	} else {
+		gtk_css_provider_load_from_data(box_rpnl_provider, "", -1, NULL);
+	}
 }
 bool editing_stack() {
 	return b_editing_stack;
@@ -579,8 +595,172 @@ void update_lastx() {
 	}
 }
 
+void update_stack_button_text() {
+	if(printops.use_unicode_signs) {
+		if(can_display_unicode_string_function(SIGN_MINUS, (void*) gtk_builder_get_object(main_builder, "label_rpn_sub"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sub")), SIGN_MINUS);
+		else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sub")), MINUS);
+		if(can_display_unicode_string_function(SIGN_MULTIPLICATION, (void*) gtk_builder_get_object(main_builder, "label_rpn_times"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_times")), SIGN_MULTIPLICATION);
+		else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_times")), MULTIPLICATION);
+		if(can_display_unicode_string_function(SIGN_DIVISION_SLASH, (void*) gtk_builder_get_object(main_builder, "label_rpn_divide"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_divide")), SIGN_DIVISION_SLASH);
+		else if(can_display_unicode_string_function(SIGN_DIVISION, (void*) gtk_builder_get_object(main_builder, "label_rpn_divide"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_divide")), SIGN_DIVISION);
+		else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_divide")), DIVISION);
+		if(can_display_unicode_string_function(SIGN_MINUS, (void*) gtk_builder_get_object(main_builder, "label_rpn_negate"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_negate")), SIGN_MINUS "x");
+		else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_negate")), MINUS "x");
+	} else {
+		gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sub")), MINUS);
+		gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_times")), MULTIPLICATION);
+		gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_divide")), DIVISION);
+		gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_negate")), MINUS "x");
+	}
+
+	FIX_SUPSUB_PRE_W(GTK_WIDGET(gtk_builder_get_object(main_builder, "label_rpn_xy")));
+	string s_xy = "x<sup>y</sup>";
+	FIX_SUPSUB(s_xy);
+	gtk_label_set_markup(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_xy")), s_xy.c_str());
+
+	if(can_display_unicode_string_function(SIGN_SQRT, (void*) gtk_builder_get_object(main_builder, "label_rpn_sqrt"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sqrt")), SIGN_SQRT);
+	else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sqrt")), "sqrt");
+	if(can_display_unicode_string_function("∑", (void*) gtk_builder_get_object(main_builder, "label_rpn_sum"))) gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sum")), "∑");
+	else gtk_label_set_text(GTK_LABEL(gtk_builder_get_object(main_builder, "label_rpn_sum")), "sum");
+
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_copyregister")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_editregister")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_clearstack")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_add")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sqrt")), -1, -1);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sum")), -1, -1);
+	GtkRequisition a;
+	gint w, h;
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_reciprocal")), &a, NULL);
+	w = a.width; h = a.height;
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_xy")), &a, NULL);
+	if(a.width > w) w = a.width;
+	if(a.height > h) h = a.height;
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sqrt")), &a, NULL);
+	if(a.width > w) w = a.width;
+	if(a.height > h) h = a.height;
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sum")), &a, NULL);
+	if(a.width > w) w = a.width;
+	if(a.height > h) h = a.height;
+	if(gtk_image_get_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_up"))) != -1) gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_up")), -1);
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup")), &a, NULL);
+	if(a.width > w) w = a.width;
+	if(a.height > h) h = a.height;
+	if(gtk_image_get_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_swap"))) != -1) gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_swap")), -1);
+	gtk_widget_get_preferred_size(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerswap")), &a, NULL);
+	gint h_i = -1;
+	if(keypad_font() || app_font()) {
+		h_i = 16 + (h - a.height);
+		if(h_i < 20) h_i = -1;
+	}
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_up")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_down")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_swap")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_copy")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_lastx")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_delete")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_edit")), h_i);
+	gtk_image_set_pixel_size(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_clear")), h_i);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_copyregister")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_editregister")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_clearstack")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_add")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sqrt")), w, h);
+	gtk_widget_set_size_request(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sum")), w, h);
+}
+
+#define SET_TOOLTIP_ACCEL(w, t) gtk_widget_set_tooltip_text(w, t); if(type >= 0 && enable_tooltips != 1) {gtk_widget_set_has_tooltip(w, FALSE);}
+void update_stack_accels(int type) {
+	bool b = false;
+	for(unordered_map<guint64, keyboard_shortcut>::iterator it = keyboard_shortcuts.begin(); it != keyboard_shortcuts.end(); ++it) {
+		if(it->second.type.size() != 1 || (type >= 0 && it->second.type[0] != type)) continue;
+		b = true;
+		switch(it->second.type[0]) {
+			case SHORTCUT_TYPE_RPN_UP: {
+				string str = _("Rotate the stack or move selected register up");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_DOWN: {
+				string str = _("Rotate the stack or move selected register down");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerdown")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_SWAP: {
+				string str = _("Swap the two top values or move the selected value to the top of the stack");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerswap")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_COPY: {
+				string str = _("Copy the selected or top value to the top of the stack");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_copyregister")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_LASTX: {
+				string str = _("Enter the top value from before the last numeric operation");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_lastx")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_DELETE: {
+				string str = _("Delete the top or selected value");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_deleteregister")), str.c_str());
+				break;
+			}
+			case SHORTCUT_TYPE_RPN_CLEAR: {
+				string str = _("Clear the RPN stack");
+				str += " (";
+				str += shortcut_to_text(it->second.key, it->second.modifier);
+				str += ")";
+				SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_clearstack")), str.c_str());
+				break;
+			}
+		}
+		if(type >= 0) break;
+	}
+	if(!b) {
+		switch(type) {
+			case SHORTCUT_TYPE_RPN_UP: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup")), _("Rotate the stack or move selected register up")); break;}
+			case SHORTCUT_TYPE_RPN_DOWN: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerdown")), _("Rotate the stack or move selected register down")); break;}
+			case SHORTCUT_TYPE_RPN_SWAP: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerswap")), _("Swap the two top values or move the selected value to the top of the stack")); break;}
+			case SHORTCUT_TYPE_RPN_COPY: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_copyregister")), _("Copy the selected or top value to the top of the stack")); break;}
+			case SHORTCUT_TYPE_RPN_LASTX: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_lastx")), _("Enter the top value from before the last numeric operation")); break;}
+			case SHORTCUT_TYPE_RPN_DELETE: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_deleteregister")), _("Delete the top or selected value")); break;}
+			case SHORTCUT_TYPE_RPN_CLEAR: {SET_TOOLTIP_ACCEL(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_clearstack")), _("Clear the RPN stack")); break;}
+		}
+	}
+}
+
 void create_stack_view() {
+
 	stackview = GTK_WIDGET(gtk_builder_get_object(main_builder, "stackview"));
+
+	box_rpnl_provider = gtk_css_provider_new();
+	gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_rpnl"))), GTK_STYLE_PROVIDER(box_rpnl_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+	if(keypad_font()) update_stack_button_font();
+	if(history_font()) update_stack_font(true);
+	update_stack_button_text();
+
 	GList *l;
 	GList *list;
 	CHILDREN_SET_FOCUS_ON_CLICK("box_rm")
@@ -610,9 +790,45 @@ void create_stack_view() {
 	gtk_tree_view_set_reorderable(GTK_TREE_VIEW(stackview), TRUE);
 	g_signal_connect((gpointer) stackstore, "row-deleted", G_CALLBACK(on_stackstore_row_deleted), NULL);
 	g_signal_connect((gpointer) stackstore, "row-inserted", G_CALLBACK(on_stackstore_row_inserted), NULL);
-	stack_view_update_font(true);
+
+	if(themestr == "Breeze" || themestr == "Breeze-Dark") {
+
+		GtkCssProvider *link_style_top = gtk_css_provider_new(); gtk_css_provider_load_from_data(link_style_top, "* {border-bottom-left-radius: 0; border-bottom-right-radius: 0;}", -1, NULL);
+		GtkCssProvider *link_style_bot = gtk_css_provider_new(); gtk_css_provider_load_from_data(link_style_bot, "* {border-top-left-radius: 0; border-top-right-radius: 0;}", -1, NULL);
+		GtkCssProvider *link_style_mid = gtk_css_provider_new(); gtk_css_provider_load_from_data(link_style_mid, "* {border-radius: 0;}", -1, NULL);
+
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_ro1"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_ro2"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_rm"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_re"))), "linked");
+
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_add"))), GTK_STYLE_PROVIDER(link_style_top), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sub"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_times"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_divide"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_xy"))), GTK_STYLE_PROVIDER(link_style_bot), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_negate"))), GTK_STYLE_PROVIDER(link_style_top), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_reciprocal"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_rpn_sqrt"))), GTK_STYLE_PROVIDER(link_style_bot), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerup"))), GTK_STYLE_PROVIDER(link_style_top), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerdown"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_registerswap"))), GTK_STYLE_PROVIDER(link_style_bot), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_copyregister"))), GTK_STYLE_PROVIDER(link_style_top), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_lastx"))), GTK_STYLE_PROVIDER(link_style_mid), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "button_deleteregister"))), GTK_STYLE_PROVIDER(link_style_bot), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	}
+
+#if GTK_MAJOR_VERSION <= 3 && GTK_MINOR_VERSION <= 18
+	if(RUNTIME_CHECK_GTK_VERSION_LESS(3, 18) && (themestr == "Ambiance" || themestr == "Radiance")) {
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_re"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_rm"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_ro1"))), "linked");
+		gtk_style_context_remove_class(gtk_widget_get_style_context(GTK_WIDGET(gtk_builder_get_object(main_builder, "box_ro2"))), "linked");
+	}
+#endif
+	if(!gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "document-edit-symbolic")) gtk_image_set_from_icon_name(GTK_IMAGE(gtk_builder_get_object(main_builder, "image_edit")), "gtk-edit", GTK_ICON_SIZE_BUTTON);
 
 	lastx.setUndefined();
 
-	gtk_builder_add_callback_symbols(main_builder, "on_button_rpn_add_clicked", G_CALLBACK(on_button_rpn_add_clicked), "on_button_rpn_sub_clicked", G_CALLBACK(on_button_rpn_sub_clicked), "on_button_rpn_times_clicked", G_CALLBACK(on_button_rpn_times_clicked), "on_button_rpn_divide_clicked", G_CALLBACK(on_button_rpn_divide_clicked), "on_button_rpn_xy_clicked", G_CALLBACK(on_button_rpn_xy_clicked), "on_button_rpn_negate_clicked", G_CALLBACK(on_button_rpn_negate_clicked), "on_button_rpn_reciprocal_clicked", G_CALLBACK(on_button_rpn_reciprocal_clicked), "on_button_rpn_sqrt_clicked", G_CALLBACK(on_button_rpn_sqrt_clicked), "on_button_rpn_sum_clicked", G_CALLBACK(on_button_rpn_sum_clicked), "on_stackview_button_press_event", G_CALLBACK(on_stackview_button_press_event), "on_stackview_popup_menu", G_CALLBACK(on_stackview_popup_menu), "on_button_registerup_clicked", G_CALLBACK(on_button_registerup_clicked), "on_button_registerdown_clicked", G_CALLBACK(on_button_registerdown_clicked), "on_button_registerswap_clicked", G_CALLBACK(on_button_registerswap_clicked), "on_button_copyregister_clicked", G_CALLBACK(on_button_copyregister_clicked), "on_button_lastx_clicked", G_CALLBACK(on_button_lastx_clicked), "on_button_deleteregister_clicked", G_CALLBACK(on_button_deleteregister_clicked), "on_button_editregister_clicked", G_CALLBACK(on_button_editregister_clicked), "on_button_clearstack_clicked", G_CALLBACK(on_button_clearstack_clicked), "on_popup_menu_item_stack_inserttext_activate", G_CALLBACK(on_popup_menu_item_stack_inserttext_activate), "on_popup_menu_item_stack_copytext_activate", G_CALLBACK(on_popup_menu_item_stack_copytext_activate), "on_popup_menu_item_stack_copy_activate", G_CALLBACK(on_popup_menu_item_stack_copy_activate), "on_popup_menu_item_stack_movetotop_activate", G_CALLBACK(on_popup_menu_item_stack_movetotop_activate), "on_popup_menu_item_stack_swap_activate", G_CALLBACK(on_popup_menu_item_stack_swap_activate), "on_popup_menu_item_stack_edit_activate", G_CALLBACK(on_popup_menu_item_stack_edit_activate), "on_popup_menu_item_stack_negate_activate", G_CALLBACK(on_popup_menu_item_stack_negate_activate), "on_popup_menu_item_stack_invert_activate", G_CALLBACK(on_popup_menu_item_stack_invert_activate), "on_popup_menu_item_stack_square_activate", G_CALLBACK(on_popup_menu_item_stack_square_activate), "on_popup_menu_item_stack_sqrt_activate", G_CALLBACK(on_popup_menu_item_stack_sqrt_activate), "on_popup_menu_item_stack_delete_activate", G_CALLBACK(on_popup_menu_item_stack_delete_activate), "on_popup_menu_item_stack_clear_activate", G_CALLBACK(on_popup_menu_item_stack_clear_activate), NULL);
+	gtk_builder_add_callback_symbols(main_builder, "on_button_rpn_add_clicked", G_CALLBACK(on_button_rpn_add_clicked), "on_button_rpn_sub_clicked", G_CALLBACK(on_button_rpn_sub_clicked), "on_button_rpn_times_clicked", G_CALLBACK(on_button_rpn_times_clicked), "on_button_rpn_divide_clicked", G_CALLBACK(on_button_rpn_divide_clicked), "on_button_rpn_xy_clicked", G_CALLBACK(on_button_rpn_xy_clicked), "on_button_rpn_negate_clicked", G_CALLBACK(on_button_rpn_negate_clicked), "on_button_rpn_reciprocal_clicked", G_CALLBACK(on_button_rpn_reciprocal_clicked), "on_button_rpn_sqrt_clicked", G_CALLBACK(on_button_rpn_sqrt_clicked), "on_button_rpn_sum_clicked", G_CALLBACK(on_button_rpn_sum_clicked), "on_stackview_button_press_event", G_CALLBACK(on_stackview_button_press_event), "on_stackview_popup_menu", G_CALLBACK(on_stackview_popup_menu), "on_button_registerup_clicked", G_CALLBACK(on_button_registerup_clicked), "on_button_registerdown_clicked", G_CALLBACK(on_button_registerdown_clicked), "on_button_registerswap_clicked", G_CALLBACK(on_button_registerswap_clicked), "on_button_copyregister_clicked", G_CALLBACK(on_button_copyregister_clicked), "on_button_lastx_clicked", G_CALLBACK(on_button_lastx_clicked), "on_button_deleteregister_clicked", G_CALLBACK(on_button_deleteregister_clicked), "on_button_editregister_clicked", G_CALLBACK(on_button_editregister_clicked), "on_button_clearstack_clicked", G_CALLBACK(on_button_clearstack_clicked), "on_popup_menu_item_stack_inserttext_activate", G_CALLBACK(on_popup_menu_item_stack_inserttext_activate), "on_popup_menu_item_stack_copytext_activate", G_CALLBACK(on_popup_menu_item_stack_copytext_activate), "on_popup_menu_item_stack_copy_activate", G_CALLBACK(on_popup_menu_item_stack_copy_activate), "on_popup_menu_item_stack_movetotop_activate", G_CALLBACK(on_popup_menu_item_stack_movetotop_activate), "on_popup_menu_item_stack_swap_activate", G_CALLBACK(on_popup_menu_item_stack_swap_activate), "on_popup_menu_item_stack_up_activate", G_CALLBACK(on_popup_menu_item_stack_up_activate), "on_popup_menu_item_stack_down_activate", G_CALLBACK(on_popup_menu_item_stack_down_activate), "on_popup_menu_item_stack_edit_activate", G_CALLBACK(on_popup_menu_item_stack_edit_activate), "on_popup_menu_item_stack_negate_activate", G_CALLBACK(on_popup_menu_item_stack_negate_activate), "on_popup_menu_item_stack_invert_activate", G_CALLBACK(on_popup_menu_item_stack_invert_activate), "on_popup_menu_item_stack_square_activate", G_CALLBACK(on_popup_menu_item_stack_square_activate), "on_popup_menu_item_stack_sqrt_activate", G_CALLBACK(on_popup_menu_item_stack_sqrt_activate), "on_popup_menu_item_stack_delete_activate", G_CALLBACK(on_popup_menu_item_stack_delete_activate), "on_popup_menu_item_stack_clear_activate", G_CALLBACK(on_popup_menu_item_stack_clear_activate), NULL);
 }

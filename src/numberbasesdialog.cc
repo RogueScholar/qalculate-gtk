@@ -27,6 +27,8 @@
 #include "support.h"
 #include "settings.h"
 #include "util.h"
+#include "mainwindow.h"
+#include "expressionedit.h"
 #include "numberbasesdialog.h"
 
 using std::string;
@@ -47,6 +49,18 @@ void on_nbases_entry_hexadecimal_changed(GtkEditable *editable, gpointer user_da
 void on_nbases_entry_duo_changed(GtkEditable *editable, gpointer user_data);
 void on_nbases_entry_roman_changed(GtkEditable *editable, gpointer user_data);
 void on_nbases_entry_sexa_changed(GtkEditable *editable, gpointer user_data);
+
+bool read_number_bases_dialog_settings_line(string &svar, string&, int &v) {
+	if(svar == "show_bases_keypad") {
+		show_bases_keypad = v;
+	} else {
+		return false;
+	}
+	return true;
+}
+void write_number_bases_dialog_settings(FILE *file) {
+	fprintf(file, "show_bases_keypad=%i\n", show_bases_keypad);
+}
 
 gboolean on_nbases_event_hide_buttons_button_release_event(GtkWidget*, GdkEventButton *event, gpointer) {
 	if(event->type == GDK_BUTTON_RELEASE && event->button == 1) {
@@ -657,12 +671,10 @@ void on_nbases_button_ac_clicked(GtkToggleButton*, gpointer) {
 	gtk_widget_grab_focus(nbases_get_entry());
 }
 
-gboolean on_nbases_dialog_key_press_event(GtkWidget *o, GdkEventKey *event, gpointer) {
-	if(b_busy) {
+gboolean on_nbases_dialog_key_press_event(GtkWidget*, GdkEventKey *event, gpointer) {
+	if(calculator_busy()) {
 		if(event->keyval == GDK_KEY_Escape) {
-			if(b_busy_expression) on_abort_calculation(NULL, 0, NULL);
-			else if(b_busy_result) on_abort_display(NULL, 0, NULL);
-			else if(b_busy_command) on_abort_command(NULL, 0, NULL);
+			abort_calculation();
 		}
 		return TRUE;
 	}
@@ -794,37 +806,99 @@ GtkWidget* get_nbases_dialog(void) {
 	return GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_dialog"));
 }
 
-void convert_number_bases(GtkWindow *parent, const gchar *initial_expression, int base) {
+void convert_number_bases(GtkWindow *parent, const MathStructure *initial_value) {
 	GtkWidget *dialog = get_nbases_dialog();
 	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
-	switch(base) {
+	update_nbases_entries(*initial_value, 0);
+	switch(evalops.parse_options.base) {
 		case BASE_BINARY: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_binary")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_binary")));
 			break;
 		}
 		case BASE_OCTAL: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_octal")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_octal")));
 			break;
 		}
 		case BASE_HEXADECIMAL: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_hexadecimal")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_hexadecimal")));
 			break;
 		}
 		case BASE_DUODECIMAL: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_duo")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_duo")));
 			break;
 		}
 		case BASE_ROMAN_NUMERALS: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_roman")), initial_expression);
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_roman")));
 			break;
 		}
 		default: {
-			gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")), initial_expression);
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")));
+		}
+	}
+	gtk_widget_show(dialog);
+	gtk_window_present_with_time(GTK_WINDOW(dialog), GDK_CURRENT_TIME);
+}
+
+void convert_number_bases(GtkWindow *parent, const gchar *initial_expression, int base) {
+	GtkWidget *dialog = get_nbases_dialog();
+	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+	if(strlen(initial_expression) == 0) {
+		update_nbases_entries(m_zero, 0);
+		gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")), "");
+	} else {
+		switch(base) {
+			case BASE_BINARY: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_binary")), initial_expression);
+				break;
+			}
+			case BASE_OCTAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_octal")), initial_expression);
+				break;
+			}
+			case BASE_HEXADECIMAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_hexadecimal")), initial_expression);
+				break;
+			}
+			case BASE_DUODECIMAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_duo")), initial_expression);
+				break;
+			}
+			case BASE_ROMAN_NUMERALS: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_roman")), initial_expression);
+				break;
+			}
+			case BASE_DECIMAL: {
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")), initial_expression);
+				break;
+			}
+			default: {
+				update_nbases_entries(m_zero, 0);
+				gtk_entry_set_text(GTK_ENTRY(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")), "");
+			}
+		}
+	}
+	switch(evalops.parse_options.base) {
+		case BASE_BINARY: {
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_binary")));
+			break;
+		}
+		case BASE_OCTAL: {
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_octal")));
+			break;
+		}
+		case BASE_HEXADECIMAL: {
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_hexadecimal")));
+			break;
+		}
+		case BASE_DUODECIMAL: {
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_duo")));
+			break;
+		}
+		case BASE_ROMAN_NUMERALS: {
+			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_roman")));
+			break;
+		}
+		default: {
 			gtk_widget_grab_focus(GTK_WIDGET(gtk_builder_get_object(nbases_builder, "nbases_entry_decimal")));
 		}
 	}
